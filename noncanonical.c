@@ -19,7 +19,7 @@ int main(int argc, char** argv)
     struct termios oldtio,newtio;
     char buf[255];
 
-    if ( (argc < 2) || 
+    if ( (argc < 2) ||    
   	     ((strcmp("/dev/ttyS0", argv[1])!=0) && 
   	      (strcmp("/dev/ttyS1", argv[1])!=0) )) {
       printf("Usage:\tnserial SerialPort\n\tex: nserial /dev/ttyS1\n");
@@ -50,7 +50,7 @@ int main(int argc, char** argv)
     newtio.c_lflag = 0;
 
     newtio.c_cc[VTIME]    = 0;   /* inter-character timer unused */
-    newtio.c_cc[VMIN]     = 5;   /* blocking read until 5 chars received */
+    newtio.c_cc[VMIN]     = 1;   /* blocking read until 5 chars received */
 
 
 
@@ -70,20 +70,23 @@ int main(int argc, char** argv)
 
     printf("New termios structure set\n");
 
+	char result[255];
 
     while (STOP==FALSE) {       /* loop for input */
-      res = read(fd,buf,255);   /* returns after 5 chars have been input */
-      buf[res]=0;               /* so we can printf... */
-      printf(":%s:%d\n", buf, res);
-      if (buf[0]=='z') STOP=TRUE;
+      res = read(fd,buf,1);   /* returns after 5 chars have been input */
+      buf[res]=0;  
+	strcat(result,buf);
+            /* so we can printf... */
+      //printf(":%s:%d\n", buf, res);
+      if (buf[0]=='\0') STOP=TRUE;
     }
-
-
+	
+	 printf("%s \n",result);
 
   /* 
     O ciclo WHILE deve ser alterado de modo a respeitar o indicado no guião 
   */
-
+	
 
 
     tcsetattr(fd,TCSANOW,&oldtio);
