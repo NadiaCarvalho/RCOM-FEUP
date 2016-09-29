@@ -52,7 +52,7 @@ int main(int argc, char** argv)
     newtio.c_lflag = 0;
 
     newtio.c_cc[VTIME]    = 0;   /* inter-character timer unused */
-    newtio.c_cc[VMIN]     = 5;   /* blocking read until 5 chars received */
+    newtio.c_cc[VMIN]     = 1;   /* blocking read until 5 chars received */
 
 
 
@@ -72,21 +72,11 @@ int main(int argc, char** argv)
 
     printf("New termios structure set\n");
 
-
-
-  /*  for (i = 0; i < 255; i++) {
-      buf[i] = 'a';
-    }
-    */
-
-    /*testing*/
-  //  buf[25] = '\n';
     
 
-	gets(buf);
-	printf(buf);
-    res = write(fd,buf,255);   
-    printf("%d bytes written\n", res);
+		gets(buf);
+    	res = write(fd,buf,strlen(buf)+1);   
+    	printf("sending: %d bytes written\n", res);
  
 
   /* 
@@ -94,8 +84,21 @@ int main(int argc, char** argv)
     o indicado no guião 
   */
 
+    tcflush(fd, TCIOFLUSH);
+	char result[255]="";
+sleep(1);
 
+    while (STOP==FALSE) {       /* loop for input */
+      	res = read(fd,buf,1);   /* returns after 5 chars have been input */
+      printf("buf: %d\n",buf[0]);
+       buf[res]=0;  
+		strcat(result,buf);
+            /* so we can printf... */
+      //printf(":%s:%d\n", buf, res);
+      if (buf[0]=='\0') STOP=TRUE;
+    }
 
+	printf("echo: %s \n",result);
    
     if ( tcsetattr(fd,TCSANOW,&oldtio) == -1) {
       perror("tcsetattr");
