@@ -73,23 +73,21 @@ int main(int argc, char** argv)
 	char result[255];
 
     while (STOP==FALSE) {       /* loop for input */
-      res = read(fd,buf,1);   /* returns after 5 chars have been input */
+      res = read(fd,buf,1);   /* returns after 1 chars have been input */
       buf[res]=0;  
-	strcat(result,buf);
-            /* so we can printf... */
-      //printf(":%s:%d\n", buf, res);
+      strcat(result,buf);
+            
       if (buf[0]=='\0') STOP=TRUE;
     }
+
+	printf("Received: %s \n",result);
 	
-	 printf("%s \n",result);
+    	res = write(fd,result,strlen(result)+1);
 
-  /* 
-    O ciclo WHILE deve ser alterado de modo a respeitar o indicado no guião 
-  */
-	
+  	printf("%d bytes written\n", res);
 
 
-    tcsetattr(fd,TCSANOW,&oldtio);
-    close(fd);
-    return 0;
+    	tcsetattr(fd,TCSANOW,&oldtio);
+    	close(fd);
+    	return 0;
 }
