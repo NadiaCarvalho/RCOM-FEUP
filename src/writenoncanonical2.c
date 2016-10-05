@@ -16,16 +16,20 @@
 #define A 0x03
 #define C_SET 0x03
 
-unsigned char SET[5];
-SET[0]=FLAG;
-SET[1]=A;
-SET[2]=C_SET;
-SET[3]=SET[1]^SET[2];
-
 volatile int STOP=FALSE;
 
 int main(int argc, char** argv)
 {
+
+
+	//SET = F-A-C-BCC-F
+	unsigned char SET[5];
+	SET[0]=FLAG;
+	SET[1]=A;
+	SET[2]=C_SET;
+	SET[3]=SET[1]^SET[2];
+	SET[4]=FLAG;
+
     int fd,c, res;
     struct termios oldtio,newtio;
     char buf[255];
@@ -38,12 +42,10 @@ int main(int argc, char** argv)
       exit(1);
     }
 
-
   /*
     Open serial port device for reading and writing and not as controlling tty
     because we don't want to get killed if linenoise sends CTRL-C.
   */
-
 
     fd = open(argv[1], O_RDWR | O_NOCTTY );
     if (fd <0) {perror(argv[1]); exit(-1); }
@@ -64,13 +66,10 @@ int main(int argc, char** argv)
     newtio.c_cc[VTIME]    = 0;   /* inter-character timer unused */
     newtio.c_cc[VMIN]     = 1;   /* blocking read until 5 chars received */
 
-
-
-  /* 
+  /*
     VTIME e VMIN devem ser alterados de forma a proteger com um temporizador a 
     leitura do(s) próximo(s) caracter(es)
   */
-
 
 
     tcflush(fd, TCIOFLUSH);
@@ -83,58 +82,24 @@ int main(int argc, char** argv)
     printf("New termios structure set\n");
 
 
-	//send set
+	//send SET
 	res=write(fd,SET,5);
+
+	//receive UA
 	char UA[5]="";
-	int tentativas=3;	
 
-	read(fd,UA,5*sizeof(char));
-	
-/*
-	while(tentativas>0){
-		read(fd,UA,5*sizeof(char));
-		if(strcmp(UA,set)==0)
-			tentativas=0;
-		else {
-			tentativas--;
-			sleep(3);		
-		}		
+	for(int i=0; i< 5; i++){
+		res= read(fd,buf,1);
+		printf("0x%08X \n", buf[0]);
+		if( buf[0] != SET[i])
+			printf("Error");
 	}
-  */  
 
-		gets(buf);
-    	res = write(fd,buf,strlen(buf)+1);   
-    	printf("sending: %d bytes written\n", res);
- 
-
-  /* 
-    O ciclo FOR e as instruções seguintes devem ser alterados de modo a respeitar 
-    o indicado no guião 
-  */
-
-    tcflush(fd, TCIOFLUSH);
-	char result[255]="";
-sleep(1);
-
-    while (STOP==FALSE) {       /* loop for input */
-      	res = read(fd,buf,1);   /* returns after 5 chars have been input */
-      printf("buf: %d\n",buf[0]);
-       buf[res]=0;  
-		strcat(result,buf);
-            /* so we can printf... */
-      //printf(":%s:%d\n", buf, res);
-      if (buf[0]=='\0') STOP=TRUE;
-    }
-
-	printf("echo: %s \n",result);
-   
-    if ( tcsetattr(fd,TCSANOW,&oldtio) == -1) {
+	
+	if ( tcsetattr(fd,TCSANOW,&oldtio) == -1) {
       perror("tcsetattr");
       exit(-1);
     }
-
-
-
 
     close(fd);
     return 0;
