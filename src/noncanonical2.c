@@ -81,33 +81,15 @@ int main(int argc, char** argv)
 	UA[4]=FLAG;
 
 	strcpy(buf, "");
-	read(fd,buf,5*sizeof(char);
-
-	res = strcmp(UA, buf);
-	if(res != 0){
-		perror("Not equal");
-		exit(-1);
-	} 
-
-	write(fd, UA, 5*sizeof(char));
-
-	char result[255];
-	strcpy(buf, "");
-
-    	while (STOP==FALSE) {       /* loop for input */
-      		res = read(fd,buf,1);   /* returns after 1 chars have been input */
-      		buf[res]=0;  
-      		strcat(result,buf);
-            
-      		if (buf[0]=='\0') STOP=TRUE;
-    	}
-
-	printf("Received: %s \n",result);
 	
-    	res = write(fd,result,strlen(result)+1);
-
-  	printf("%d bytes written\n", res);
-
+	int i;
+	for(i=0; i< 5; i++){
+		res= read(fd,buf,1);
+		printf("0x%08X \n", buf[0]);
+		if( buf[0] != UA[i]){
+			perror("Not equal");
+			}
+	}
 
     	tcsetattr(fd,TCSANOW,&oldtio);
     	close(fd);
