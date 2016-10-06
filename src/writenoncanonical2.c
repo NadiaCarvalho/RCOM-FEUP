@@ -22,6 +22,9 @@ volatile int STOP=FALSE;
 
 int flag=1, conta=1;
 int fd,c, res;
+int success = 0;
+int fail =0;
+
 
 void atende()                   // atende alarme
 {	
@@ -32,10 +35,11 @@ void atende()                   // atende alarme
 	SET[2]=C_SET;
 	SET[3]=SET[1]^SET[2];
 	SET[4]=FLAG;
-	printf("alarme # %d\n", conta);
+	
 	conta++;	
-	if(!sucess){
+	if(!success){
 	if(conta<4){
+		printf("alarme # %d\n", conta);
 		alarm(3);
 		flag=1;
 		//send SET
@@ -114,12 +118,11 @@ int main(int argc, char** argv)
     printf("New termios structure set\n");
 
 	
-	(void) signal(SIGALRM, atende);  // instala  rotina que atende interrupcao
-
 	//send SET
 	res=write(fd,SET,5);
-	int success = 0;
-	int fail =0;
+
+	(void) signal(SIGALRM, atende);  // instala  rotina que atende interrupcao
+
 
 	   if(flag){
 		  alarm(3);                 // activa alarme de 3s
@@ -138,6 +141,7 @@ int main(int argc, char** argv)
 					
 			}
 			if(!fail){
+				printf("success");
 				success=1;			
 				flag=0;
 			}
