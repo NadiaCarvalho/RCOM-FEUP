@@ -91,6 +91,8 @@ int main(int argc, char** argv)
 			}
 	}
 
+	write(fd, UA, 5);
+
     	tcsetattr(fd,TCSANOW,&oldtio);
     	close(fd);
     	return 0;
