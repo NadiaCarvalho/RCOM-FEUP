@@ -5,6 +5,8 @@
 #include <fcntl.h>
 #include <termios.h>
 #include <stdio.h>
+#include <unistd.h>
+#include <signal.h>
 
 #define BAUDRATE B38400
 #define MODEMDEVICE "/dev/ttyS1"
@@ -18,6 +20,36 @@
 
 volatile int STOP=FALSE;
 
+int flag=1, conta=1;
+int fd,c, res;
+
+void atende()                   // atende alarme
+{	
+	//SET = F-A-C-BCC-F
+	unsigned char SET[5];
+	SET[0]=FLAG;
+	SET[1]=A;
+	SET[2]=C_SET;
+	SET[3]=SET[1]^SET[2];
+	SET[4]=FLAG;
+	printf("alarme # %d\n", conta);
+	conta++;	
+	if(!sucess){
+	if(conta<4){
+		alarm(3);
+		flag=1;
+		//send SET
+		if(flag)	
+		write(fd,SET,5);
+		
+	}
+	if(conta==4){
+	exit(1);
+	}
+}	
+}
+
+
 int main(int argc, char** argv)
 {
 
@@ -30,7 +62,7 @@ int main(int argc, char** argv)
 	SET[3]=SET[1]^SET[2];
 	SET[4]=FLAG;
 
-    int fd,c, res;
+    
     struct termios oldtio,newtio;
     char buf[255];
     int i, sum = 0, speed = 0;
@@ -81,20 +113,40 @@ int main(int argc, char** argv)
 
     printf("New termios structure set\n");
 
+	
+	(void) signal(SIGALRM, atende);  // instala  rotina que atende interrupcao
 
 	//send SET
 	res=write(fd,SET,5);
+	int success = 0;
+	int fail =0;
 
-	//receive UA
-	char UA[5]="";
+	   if(flag){
+		  alarm(3);                 // activa alarme de 3s
+			//receive UA
+			char UA[5]="";
+			fail=0;
+			for(int i=0; i< 5; i++){
+				if(!success){
+					res= read(fd,buf,1);
+					printf("0x%08X \n", buf[0]);
+					if( buf[0] != SET[i]){
+						fail=1;
+					}
+				}
+				
+					
+			}
+			if(!fail){
+				success=1;			
+				flag=0;
+			}
+	   }
 
-	for(int i=0; i< 5; i++){
-		res= read(fd,buf,1);
-		printf("0x%08X \n", buf[0]);
-		if( buf[0] != SET[i])
-			printf("Error");
-	}
 
+
+
+	printf("sai do while");
 	
 	if ( tcsetattr(fd,TCSANOW,&oldtio) == -1) {
       perror("tcsetattr");
