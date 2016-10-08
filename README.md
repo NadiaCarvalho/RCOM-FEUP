@@ -12,5 +12,5 @@ It's recomended to install ```socat``` to use this script.
 Open three terminals.
 
 On the first run the script:```sh port.sh```
-On the second run the ```make``` command to compile the project and then ```sudo ./app 0``` for the sender and ```sudo ./app 1``` for the receiver.
+On the second run the ```make``` command to compile the project and then ```sudo ./app 0``` for the sender or ```sudo ./app 1``` for the receiver.
 On the third run ```sudo ./app 1```
