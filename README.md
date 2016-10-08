@@ -13,6 +13,6 @@ Open three terminals.
 
 1.On the first run the script:``` sh port.sh ```
 
-2.On the second run the ``` make ``` command to compile the project and then ``` sudo ./app 0 ``` for the sender or ``` sudo ./app 1 ``` for the receiver
+2.On the second run the ``` make ``` command to compile the project and then ``` sudo ./app 0 ``` for the sender.
 
-3.On the third run ``` sudo ./app 1 ```
+3.On the third run ``` sudo ./app 1 ``` for the receiver.
