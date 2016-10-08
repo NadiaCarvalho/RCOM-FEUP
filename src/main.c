@@ -14,11 +14,11 @@ int main(int argc, char** argv)
 	}
 
 	if((strcmp("0", argv[1])==0)){
-      printf("whatup 0\n");
+      printf("----SENDER----\n");
       writenoncanonical("/dev/ttyS0");
 
   }else if((strcmp("1", argv[1])==0)){
-      printf("whatup 1 \n");
+      printf("----Receiver---- \n");
       noncanonical("/dev/ttyS0");
   }
    	return 0;
