@@ -14,14 +14,6 @@ int fd,c, res;
 
 void atende()                   // atende alarme
 {
-  //SET = F-A-C-BCC-F
-  unsigned char SET[5];
-  SET[0]=FLAG;
-  SET[1]=A;
-  SET[2]=C_SET;
-  SET[3]=SET[1]^SET[2];
-  SET[4]=FLAG;
-
   conta++;
   if(!success){
     if(conta<4){
@@ -43,16 +35,6 @@ void atende()                   // atende alarme
 
 int writenoncanonical(char* SerialPort)
 {
-
-
-  //SET = F-A-C-BCC-F
-  unsigned char SET[5];
-  SET[0]=FLAG;
-  SET[1]=A;
-  SET[2]=C_SET;
-  SET[3]=SET[1]^SET[2];
-  SET[4]=FLAG;
-
 
   struct termios oldtio,newtio;
   char buf[255];
@@ -201,13 +183,6 @@ int noncanonical(char* SerialPort)
   }
 
   printf("New termios structure set\n");
-
-  unsigned char UA[5];
-  UA[0]=FLAG;
-  UA[1]=A;
-  UA[2]=C_SET;
-  UA[3]=UA[1]^UA[2];
-  UA[4]=FLAG;
 
   strcpy(buf, "");
 

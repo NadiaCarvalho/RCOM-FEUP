@@ -11,7 +11,10 @@
 #define A 0x03
 #define C_SET 0x03
 
+//SET = F-A-C-BCC-F
+static char SET[5]={FLAG,A,C_SET,A^C_SET,FLAG};
 
+static char UA[5]={FLAG,A,C_SET,A^C_SET,FLAG};
 
 void atender();
 
