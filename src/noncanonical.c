@@ -10,6 +10,9 @@
 #define _POSIX_SOURCE 1 /* POSIX compliant source */
 #define FALSE 0
 #define TRUE 1
+#define FLAG 0x7E
+#define A 0x03
+#define C_SET 0x03
 
 volatile int STOP=FALSE;
 
@@ -19,8 +22,8 @@ int main(int argc, char** argv)
     struct termios oldtio,newtio;
     char buf[255];
 
-    if ( (argc < 2) ||    
-  	     ((strcmp("/dev/ttyS0", argv[1])!=0) && 
+    if ( (argc < 2) ||
+  	     ((strcmp("/dev/ttyS0", argv[1])!=0) &&
   	      (strcmp("/dev/ttyS1", argv[1])!=0) )) {
       printf("Usage:\tnserial SerialPort\n\tex: nserial /dev/ttyS1\n");
       exit(1);
@@ -31,8 +34,8 @@ int main(int argc, char** argv)
     Open serial port device for reading and writing and not as controlling tty
     because we don't want to get killed if linenoise sends CTRL-C.
   */
-  
-    
+
+
     fd = open(argv[1], O_RDWR | O_NOCTTY );
     if (fd <0) {perror(argv[1]); exit(-1); }
 
@@ -54,9 +57,9 @@ int main(int argc, char** argv)
 
 
 
-  /* 
-    VTIME e VMIN devem ser alterados de forma a proteger com um temporizador a 
-    leitura do(s) próximo(s) caracter(es)
+  /*
+    VTIME e VMIN devem ser alterados de forma a proteger com um temporizador a
+    leitura do(s) prÃ³ximo(s) caracter(es)
   */
 
 
@@ -70,22 +73,25 @@ int main(int argc, char** argv)
 
     printf("New termios structure set\n");
 
-	char result[255];
+	unsigned char UA[5];
+	UA[0]=FLAG;
+	UA[1]=A;
+	UA[2]=C_SET;
+	UA[3]=UA[1]^UA[2];
+	UA[4]=FLAG;
 
-    while (STOP==FALSE) {       /* loop for input */
-      res = read(fd,buf,1);   /* returns after 1 chars have been input */
-      buf[res]=0;  
-      strcat(result,buf);
-            
-      if (buf[0]=='\0') STOP=TRUE;
-    }
+	strcpy(buf, "");
 
-	printf("Received: %s \n",result);
-	
-    	res = write(fd,result,strlen(result)+1);
+	int i;
+	for(i=0; i< 5; i++){
+		res= read(fd,buf,1);
+		printf("0x%08X \n", buf[0]);
+		if( buf[0] != UA[i]){
+			perror("Not equal");
+			}
+	}
 
-  	printf("%d bytes written\n", res);
-
+	write(fd, UA, 5);
 
     	tcsetattr(fd,TCSANOW,&oldtio);
     	close(fd);

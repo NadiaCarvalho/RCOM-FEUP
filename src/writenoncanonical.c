@@ -5,6 +5,8 @@
 #include <fcntl.h>
 #include <termios.h>
 #include <stdio.h>
+#include <unistd.h>
+#include <signal.h>
 
 #define BAUDRATE B38400
 #define MODEMDEVICE "/dev/ttyS1"
@@ -12,11 +14,59 @@
 #define FALSE 0
 #define TRUE 1
 
+#define FLAG 0x7E
+#define A 0x03
+#define C_SET 0x03
+
 volatile int STOP=FALSE;
+
+int flag=1, conta=1;
+int fd,c, res;
+int success = 0;
+int fail =0;
+
+
+void atende()                   // atende alarme
+{	
+	//SET = F-A-C-BCC-F
+	unsigned char SET[5];
+	SET[0]=FLAG;
+	SET[1]=A;
+	SET[2]=C_SET;
+	SET[3]=SET[1]^SET[2];
+	SET[4]=FLAG;
+	
+	conta++;	
+	if(!success){
+	if(conta<4){
+		printf("alarme # %d\n", conta);
+		alarm(3);
+		flag=1;
+		//send SET
+		if(flag)	
+		write(fd,SET,5);
+		
+	}
+	if(conta==4){
+	exit(1);
+	}
+}	
+}
+
 
 int main(int argc, char** argv)
 {
-    int fd,c, res;
+
+
+	//SET = F-A-C-BCC-F
+	unsigned char SET[5];
+	SET[0]=FLAG;
+	SET[1]=A;
+	SET[2]=C_SET;
+	SET[3]=SET[1]^SET[2];
+	SET[4]=FLAG;
+
+    
     struct termios oldtio,newtio;
     char buf[255];
     int i, sum = 0, speed = 0;
@@ -28,12 +78,10 @@ int main(int argc, char** argv)
       exit(1);
     }
 
-
   /*
     Open serial port device for reading and writing and not as controlling tty
     because we don't want to get killed if linenoise sends CTRL-C.
   */
-
 
     fd = open(argv[1], O_RDWR | O_NOCTTY );
     if (fd <0) {perror(argv[1]); exit(-1); }
@@ -54,13 +102,10 @@ int main(int argc, char** argv)
     newtio.c_cc[VTIME]    = 0;   /* inter-character timer unused */
     newtio.c_cc[VMIN]     = 1;   /* blocking read until 5 chars received */
 
-
-
-  /* 
+  /*
     VTIME e VMIN devem ser alterados de forma a proteger com um temporizador a 
     leitura do(s) próximo(s) caracter(es)
   */
-
 
 
     tcflush(fd, TCIOFLUSH);
@@ -72,41 +117,45 @@ int main(int argc, char** argv)
 
     printf("New termios structure set\n");
 
-    
+	
+	//send SET
+	res=write(fd,SET,5);
 
-		gets(buf);
-    	res = write(fd,buf,strlen(buf)+1);   
-    	printf("sending: %d bytes written\n", res);
- 
+	(void) signal(SIGALRM, atende);  // instala  rotina que atende interrupcao
 
-  /* 
-    O ciclo FOR e as instruções seguintes devem ser alterados de modo a respeitar 
-    o indicado no guião 
-  */
 
-    tcflush(fd, TCIOFLUSH);
-	char result[255]="";
-sleep(1);
+	   if(flag){
+		  alarm(3);                 // activa alarme de 3s
+			//receive UA
+			char UA[5]="";
+			fail=0;
+			for(int i=0; i< 5; i++){
+				if(!success){
+					res= read(fd,buf,1);
+					printf("0x%08X \n", buf[0]);
+					if( buf[0] != SET[i]){
+						fail=1;
+					}
+				}
+				
+					
+			}
+			if(!fail){
+				printf("success");
+				success=1;			
+				flag=0;
+			}
+	   }
 
-    while (STOP==FALSE) {       /* loop for input */
-      	res = read(fd,buf,1);   /* returns after 5 chars have been input */
-      printf("buf: %d\n",buf[0]);
-       buf[res]=0;  
-		strcat(result,buf);
-            /* so we can printf... */
-      //printf(":%s:%d\n", buf, res);
-      if (buf[0]=='\0') STOP=TRUE;
-    }
 
-	printf("echo: %s \n",result);
-   
-    if ( tcsetattr(fd,TCSANOW,&oldtio) == -1) {
+
+
+	printf("sai do while");
+	
+	if ( tcsetattr(fd,TCSANOW,&oldtio) == -1) {
       perror("tcsetattr");
       exit(-1);
     }
-
-
-
 
     close(fd);
     return 0;
