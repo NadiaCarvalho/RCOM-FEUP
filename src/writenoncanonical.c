@@ -7,27 +7,13 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <signal.h>
+#include "DataLinkLayer.h"
 
-#define BAUDRATE B38400
-#define MODEMDEVICE "/dev/ttyS1"
-#define _POSIX_SOURCE 1 /* POSIX compliant source */
-#define FALSE 0
-#define TRUE 1
-
-#define FLAG 0x7E
-#define A 0x03
-#define C_SET 0x03
-
-volatile int STOP=FALSE;
-
-int flag=1, conta=1;
+int flag=1, conta=1, success = 0, fail = 0;
 int fd,c, res;
-int success = 0;
-int fail =0;
-
 
 void atende()                   // atende alarme
-{	
+{
 	//SET = F-A-C-BCC-F
 	unsigned char SET[5];
 	SET[0]=FLAG;
@@ -35,26 +21,26 @@ void atende()                   // atende alarme
 	SET[2]=C_SET;
 	SET[3]=SET[1]^SET[2];
 	SET[4]=FLAG;
-	
-	conta++;	
+
+	conta++;
 	if(!success){
 	if(conta<4){
 		printf("alarme # %d\n", conta);
 		alarm(3);
 		flag=1;
 		//send SET
-		if(flag)	
+		if(flag)
 		write(fd,SET,5);
-		
+
 	}
 	if(conta==4){
 	exit(1);
 	}
-}	
+}
 }
 
 
-int main(int argc, char** argv)
+int writenoncanonical(char* SerialPort)
 {
 
 
@@ -66,14 +52,13 @@ int main(int argc, char** argv)
 	SET[3]=SET[1]^SET[2];
 	SET[4]=FLAG;
 
-    
+
     struct termios oldtio,newtio;
     char buf[255];
     int i, sum = 0, speed = 0;
-    
-    if ( (argc < 2) || 
-  	     ((strcmp("/dev/ttyS0", argv[1])!=0) && 
-  	      (strcmp("/dev/ttyS1", argv[1])!=0) )) {
+
+    if (  ((strcmp("/dev/ttyS0", SerialPort)!=0) &&
+  	      (strcmp("/dev/ttyS1", SerialPort)!=0) )) {
       printf("Usage:\tnserial SerialPort\n\tex: nserial /dev/ttyS1\n");
       exit(1);
     }
@@ -83,8 +68,8 @@ int main(int argc, char** argv)
     because we don't want to get killed if linenoise sends CTRL-C.
   */
 
-    fd = open(argv[1], O_RDWR | O_NOCTTY );
-    if (fd <0) {perror(argv[1]); exit(-1); }
+    fd = open(SerialPort, O_RDWR | O_NOCTTY );
+    if (fd <0) {perror(SerialPort); exit(-1); }
 
     if ( tcgetattr(fd,&oldtio) == -1) { /* save current port settings */
       perror("tcgetattr");
@@ -103,8 +88,8 @@ int main(int argc, char** argv)
     newtio.c_cc[VMIN]     = 1;   /* blocking read until 5 chars received */
 
   /*
-    VTIME e VMIN devem ser alterados de forma a proteger com um temporizador a 
-    leitura do(s) próximo(s) caracter(es)
+    VTIME e VMIN devem ser alterados de forma a proteger com um temporizador a
+    leitura do(s) prï¿½ximo(s) caracter(es)
   */
 
 
@@ -117,10 +102,10 @@ int main(int argc, char** argv)
 
     printf("New termios structure set\n");
 
-	
+	printf("1\n");
 	//send SET
 	res=write(fd,SET,5);
-
+	printf("2\n");
 	(void) signal(SIGALRM, atende);  // instala  rotina que atende interrupcao
 
 
@@ -137,12 +122,12 @@ int main(int argc, char** argv)
 						fail=1;
 					}
 				}
-				
-					
+
+
 			}
 			if(!fail){
 				printf("success");
-				success=1;			
+				success=1;
 				flag=0;
 			}
 	   }
@@ -151,7 +136,7 @@ int main(int argc, char** argv)
 
 
 	printf("sai do while");
-	
+
 	if ( tcsetattr(fd,TCSANOW,&oldtio) == -1) {
       perror("tcsetattr");
       exit(-1);

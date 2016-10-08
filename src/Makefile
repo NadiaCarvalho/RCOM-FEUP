@@ -1,2 +1,2 @@
-all: noncanonical.c writenoncanonical.c
-	gcc -Wall noncanonical.c writenoncanonical.c -o app
+all: main.c noncanonical.c writenoncanonical.c
+	gcc -Wall main.c noncanonical.c writenoncanonical.c -o app

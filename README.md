@@ -9,4 +9,8 @@ sh port.sh
 It's recomended to install ```socat``` to use this script.
 
 
-Run the ```make``` command to compile the project.
+Open three terminals.
+
+On the first run the script: sh port.sh
+On the second run the ```make``` command to compile the project and then ```sudo ./app 0```
+On the third run ```sudo ./app 1```
