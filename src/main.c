@@ -19,7 +19,7 @@ int main(int argc, char** argv)
 
 	}else if((strcmp("1", argv[1])==0)){
 		printf("----Receiver---- \n");
-		noncanonical("/dev/ttyS0");
+		noncanonical("/dev/ttyS1");
 	}
 	return 0;
 }
