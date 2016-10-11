@@ -16,8 +16,14 @@ static char SET[5]={FLAG,A,C_SET,A^C_SET,FLAG};
 
 static char UA[5]={FLAG,A,C_SET,A^C_SET,FLAG};
 
+
+
 void atender();
 
 int writenoncanonical(char* SerialPort);
 
 int noncanonical(char* SerialPort);
+
+int llopen();
+
+int llclose();
