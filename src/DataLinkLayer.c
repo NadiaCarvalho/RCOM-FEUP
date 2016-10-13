@@ -9,9 +9,6 @@
 #include <signal.h>
 #include "DataLinkLayer.h"
 
-int flag=1, conta=1, success = 0, fail = 0;
-int fd, c;
-struct termios oldtio,newtio;
 
 void atende()                   // atende alarme
 {
@@ -33,15 +30,25 @@ void atende()                   // atende alarme
   }
 }
 
-int llopen (char* SerialPort) {
+int openSerialPort(char* SerialPort){
 
+  /*
+  Open serial port device for reading and writing and not as controlling tty
+  because we don't want to get killed if linenoise sends CTRL-C.
+  */
 
- fd = open(SerialPort, O_RDWR | O_NOCTTY );
-  if (fd <0) {perror(SerialPort); exit(-1); }
+  fd = open(SerialPort, O_RDWR | O_NOCTTY );
+  if (fd <0) {
+    perror(SerialPort);
+    return -1;
+  }
+  return fd;
+}
 
+int setTermiosStructure(){
   if ( tcgetattr(fd,&oldtio) == -1) { /* save current port settings */
     perror("tcgetattr");
-    exit(-1);
+    return -1;
   }
 
   bzero(&newtio, sizeof(newtio));
@@ -61,35 +68,28 @@ int llopen (char* SerialPort) {
   */
 
 
-  tcflush(fd, TCIOFLUSH);
+  if (tcflush(fd, TCIOFLUSH) < 0) {
+    perror("tcflush");
+    return -1;
+  }
+
 
   if ( tcsetattr(fd,TCSANOW,&newtio) == -1) {
     perror("tcsetattr");
-    exit(-1);
+    return -1;
   }
 
   printf("New termios structure set\n");
-	return fd;
 
+  return 1;
 }
 
-int llclose(int fd){
-	
-  if ( tcsetattr(fd,TCSANOW,&oldtio) == -1) {
-    perror("tcsetattr");
-   return -1;
-  }
-
-  return close(fd);
-	
-}
-
+int llopen(char * SerialPort, Functionality functionality)
 
 int writenoncanonical(char* SerialPort)
 {
   char buf[255];
-  int i, sum = 0, speed = 0, res;
-
+  int i, sum = 0, speed = 0;
 
   if (  ((strcmp("/dev/ttyS0", SerialPort)!=0) &&
   (strcmp("/dev/ttyS1", SerialPort)!=0) )) {
@@ -97,12 +97,6 @@ int writenoncanonical(char* SerialPort)
     exit(1);
   }
 
-  /*
-  Open serial port device for reading and writing and not as controlling tty
-  because we don't want to get killed if linenoise sends CTRL-C.
-  */
-
-  fd=llopen(SerialPort);
   //send SET
   res=write(fd,SET,5);
   printf("SENDER: sending SET: 0x%08X , 0x%08X , 0x%08X , 0x%08X , 0x%08X\n", SET[0], SET[1],SET[2],SET[3],SET[4]);
@@ -114,8 +108,7 @@ int writenoncanonical(char* SerialPort)
     //receive UA
     char UA[5]="";
     fail=0;
-	int i;
-    for(i=0; i< 5; i++){
+    for(int i=0; i< 5; i++){
       if(!success){
         printf("SENDER: reading UA \n");
         res= read(fd,buf,1);
@@ -134,16 +127,22 @@ int writenoncanonical(char* SerialPort)
     }
   }
 
-res = llclose(fd);
 
 
-  return res;
+  if ( tcsetattr(fd,TCSANOW,&oldtio) == -1) {
+    perror("tcsetattr");
+    exit(-1);
+  }
+
+  close(fd);
+  return 0;
 }
 
 
 int noncanonical(char* SerialPort)
 {
-  int c, res;
+  int fd,c, res;
+  struct termios oldtio,newtio;
   char buf[255];
 
   if (  ((strcmp("/dev/ttyS0", SerialPort)!=0) &&
@@ -158,7 +157,43 @@ int noncanonical(char* SerialPort)
   because we don't want to get killed if linenoise sends CTRL-C.
   */
 
-	fd=llopen(SerialPort);
+
+  fd = open(SerialPort, O_RDWR | O_NOCTTY );
+  if (fd <0) {perror(SerialPort); exit(-1); }
+
+  if ( tcgetattr(fd,&oldtio) == -1) { /* save current port settings */
+    perror("tcgetattr");
+    exit(-1);
+  }
+
+  bzero(&newtio, sizeof(newtio));
+  newtio.c_cflag = BAUDRATE | CS8 | CLOCAL | CREAD;
+  newtio.c_iflag = IGNPAR;
+  newtio.c_oflag = 0;
+
+  /* set input mode (non-canonical, no echo,...) */
+  newtio.c_lflag = 0;
+
+  newtio.c_cc[VTIME]    = 0;   /* inter-character timer unused */
+  newtio.c_cc[VMIN]     = 1;   /* blocking read until 5 chars received */
+
+
+
+  /*
+  VTIME e VMIN devem ser alterados de forma a proteger com um temporizador a
+  leitura do(s) próximo(s) caracter(es)
+  */
+
+
+
+  tcflush(fd, TCIOFLUSH);
+
+  if ( tcsetattr(fd,TCSANOW,&newtio) == -1) {
+    perror("tcsetattr");
+    exit(-1);
+  }
+
+  printf("New termios structure set\n");
 
   strcpy(buf, "");
 
@@ -175,7 +210,7 @@ int noncanonical(char* SerialPort)
   printf("RECEIVER: sending UA\n");
   write(fd, UA, 5);
 
-  res=llclose(fd);
-  
-	return res;
+  tcsetattr(fd,TCSANOW,&oldtio);
+  close(fd);
+  return 0;
 }

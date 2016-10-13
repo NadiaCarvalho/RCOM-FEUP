@@ -3,7 +3,7 @@
 #include <string.h>
 #include <strings.h>
 #include "DataLinkLayer.h"
-
+#include "AppLayer.h"
 
 int main(int argc, char** argv)
 {
@@ -15,11 +15,14 @@ int main(int argc, char** argv)
 
 	if((strcmp("0", argv[1])==0)){
 		printf("----SENDER----\n");
-		writenoncanonical("/dev/ttyS0");
+		functionality=TRANSMITER;
+		appLayer("/dev/ttyS0" );
+
 
 	}else if((strcmp("1", argv[1])==0)){
 		printf("----Receiver---- \n");
-		noncanonical("/dev/ttyS0");
+		functionality=RECEIVER;
+		appLayer("/dev/ttyS0");
 	}
 	return 0;
 }
