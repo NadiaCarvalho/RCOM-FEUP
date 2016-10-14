@@ -1,6 +1,8 @@
-#pragma once
+#ifndef DATALINKLAYER_H
+#define DATALINKLAYER_H
 
 #include <termios.h>
+#include <stdio.h>
 
 #define BAUDRATE B38400
 #define MODEMDEVICE "/dev/ttyS1"
@@ -13,13 +15,16 @@
 
 struct termios oldtio,newtio;
 
-int flag=1, conta=1, success = 0, fail = 0;
+
 int fd, c, res;
 
+enum Functionality { TRANSMITER, RECEIVER };
 
 typedef enum {
-  TRANSMITER = 0, RECEIVER = 1
-} Functionality=TRANSMITER;
+	START,FLAG, A, C, BCC, SUCESS
+} ReadingArrayState;
+
+
 
 
 //SET = F-A-C-BCC-F
@@ -34,3 +39,12 @@ int writenoncanonical(char* SerialPort);
 int noncanonical(char* SerialPort);
 
 int openSerialPort(char* SerialPort);
+
+int setTermiosStructure();
+
+int llopenTransmiter(char* SerialPort);
+
+int llopenReceiver(char* SerialPort);
+
+
+#endif

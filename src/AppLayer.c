@@ -1,19 +1,37 @@
 #include "AppLayer.h"
 #include "DataLinkLayer.h"
+#include <fcntl.h>
+#include <signal.h>
+#include <stdio.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <termios.h>
+#include <unistd.h>
 
-appLayer(Functionality functionality, char * SerialPort){
+int appLayer(char *SerialPort, enum Functionality functionality) {
 
-
-  if(openSerialPort(char * SerialPort)==-1){
+  if (openSerialPort(SerialPort) == -1) {
     printf("Error opening serial port\n");
     exit(-1);
   }
-
-  if(setTermiosStructure()==-1){
-    prinft("Error seting new termios\n");
+  if (setTermiosStructure() == -1) {
+    printf("Error seting new termios\n");
     exit(-1);
-  };
+  }
 
-  //TODO: acabar
-  llopen(functionality, mode);
+  llopen(SerialPort, functionality);
+
+  return 1;
+}
+
+int llopen(char *SerialPort, enum Functionality functionality) {
+
+  switch (functionality) {
+  case TRANSMITER:
+    llopenTransmiter(SerialPort);
+    break;
+  case RECEIVER:
+    llopenReceiver(SerialPort);
+    break;
+  }
 }

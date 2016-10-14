@@ -9,6 +9,7 @@
 #include <signal.h>
 #include "DataLinkLayer.h"
 
+int flag=1, conta=1, success = 0, fail = 0;
 
 void atende()                   // atende alarme
 {
@@ -30,12 +31,62 @@ void atende()                   // atende alarme
   }
 }
 
+ReadingArrayState nextState(ReadingArrayState state){
+	switch (state){
+		case START:
+			state = FLAG;
+			break;
+		case FLAG:
+			state = A;
+			break;
+		case A:
+			state = C;
+			break;
+		case C:
+			state = BCC;
+			break;
+		case BCC:
+			state = SUCESS;
+			break;
+	}
+
+	return state;
+}
+
+int readingArray(int fd, int compareTo[]){
+	ReadingArrayState state = START;
+	int res;
+
+	char buf[255];
+
+	int i=0;
+	while(1){
+		res= read(fd,buf,1);
+
+   	 	if( buf[0] == compareTo[i]){
+     	 	i++;
+			state=nextState(state);
+			if(state == SUCESS){
+				break;
+			}
+    	}
+		else {
+			if(buf[0] == FLAG){
+				state = FLAG;
+			}
+			else state = START;
+		}
+	}
+}
+
+
 int openSerialPort(char* SerialPort){
 
   /*
   Open serial port device for reading and writing and not as controlling tty
   because we don't want to get killed if linenoise sends CTRL-C.
   */
+
 
   fd = open(SerialPort, O_RDWR | O_NOCTTY );
   if (fd <0) {
@@ -84,18 +135,14 @@ int setTermiosStructure(){
   return 1;
 }
 
-int llopen(char * SerialPort, Functionality functionality)
 
-int writenoncanonical(char* SerialPort)
+
+int llopenTransmiter(char* SerialPort)
 {
   char buf[255];
   int i, sum = 0, speed = 0;
 
-  if (  ((strcmp("/dev/ttyS0", SerialPort)!=0) &&
-  (strcmp("/dev/ttyS1", SerialPort)!=0) )) {
-    printf("Usage:\tnserial SerialPort\n\tex: nserial /dev/ttyS1\n");
-    exit(1);
-  }
+
 
   //send SET
   res=write(fd,SET,5);
@@ -139,7 +186,7 @@ int writenoncanonical(char* SerialPort)
 }
 
 
-int noncanonical(char* SerialPort)
+int llopenReceiver(char* SerialPort)
 {
   int fd,c, res;
   struct termios oldtio,newtio;
