@@ -8,7 +8,7 @@
 #include <termios.h>
 #include <unistd.h>
 
-int appLayer(char *SerialPort, enum Functionality functionality) {
+int appLayer(char *SerialPort, enum Functionality func) {
 
   if (openSerialPort(SerialPort) == -1) {
     printf("Error opening serial port\n");
@@ -19,14 +19,14 @@ int appLayer(char *SerialPort, enum Functionality functionality) {
     exit(-1);
   }
 
-  llopen(SerialPort, functionality);
+  llopen(SerialPort, func);
 
   return 1;
 }
 
-int llopen(char *SerialPort, enum Functionality functionality) {
+int llopen(char *SerialPort, enum Functionality func) {
 
-  switch (functionality) {
+  switch (func) {
   case TRANSMITER:
     llopenTransmiter(SerialPort);
     break;
