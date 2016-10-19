@@ -18,7 +18,7 @@ struct termios oldtio, newtio;
 int fd, c, res;
 
 // WARNING: use diferente name for the state from global variables...
-typedef enum { START, FLAG_STATE, A_STATE, C, BCC, SUCCESS } ReadingArrayState;
+typedef enum { START, FLAG_STATE, A_STATE, C_STATE, BCC, SUCCESS } ReadingArrayState;
 
 // SET = F-A-C-BCC-F
 static char SET[5] = {FLAG, A, C_SET, A ^ C_SET, FLAG};
