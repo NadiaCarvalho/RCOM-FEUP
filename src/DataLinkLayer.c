@@ -20,14 +20,14 @@ void atende() {
       // send SET
       printf("SENDER: sending SET\n");
       write(fd, SET, 5);
-
-      if (tries == 4) {
+	}
+     else if (tries == 4) {
         printf("Timeout: UA not acknowledge");
         exit(1);
       }
     }
   }
-}
+
 ReadingArrayState nextState(ReadingArrayState state) {
   switch (state) {
   case START:
@@ -123,7 +123,7 @@ int readingArray(int fd, char compareTo[]) {
   int i = 0;
   while (1) {
     res = read(fd, buf, 1);
-
+	printf("0x%08X", buf[0]);
     if (buf[0] == compareTo[i]) {
       i++;
       state = nextState(state);
@@ -162,7 +162,6 @@ int llopenTransmiter(char *SerialPort) {
 }
 
 int llopenReceiver(char *SerialPort) {
-  int fd, c, res;
   char buf[255];
 
   strcpy(buf, "");
