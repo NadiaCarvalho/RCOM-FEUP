@@ -1,10 +1,10 @@
 #include "AppLayer.h"
 #include "DataLinkLayer.h"
 #include "Utilities.h"
-#include <sys/stat.h>
 #include <fcntl.h>
 #include <signal.h>
 #include <stdio.h>
+#include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <termios.h>
@@ -23,47 +23,49 @@ int appLayer(char *SerialPort, enum Functionality func) {
 
   llopen(SerialPort, func);
 
-  if(func == TRANSMITER){
+  if (func == TRANSMITER) {
     sendData();
-  }else{
+  } else {
     receiveData();
   }
-
 
   return 1;
 }
 
-int sendData(){
+int sendData() {
 
-    char file[255];
-    file=getFile();
-    printf("%s\n",file );;
-    char buf[255];
-    int fdFileToSend = open(file, O_RDONLY);
-    printf("opend file" );
+  char *fileName = malloc(sizeof(char) * 255);
+  getFile(fileName);
+  FILE *fp;
+  fp = fopen(fileName, "rb");
+  if (fp == NULL) {
+    printf("Could not open file  test.c");
+  }
+  printf("opened file");
 
-    //Determine file sizeo
-    struct stat st;
-    stat(file, &st);
-    int fileSize=st.st_size;
-    printf("file size:" );
-    printf("%s\n", fileSize );
+  // Determine file size
+  int size;
+  size= fileSize(fp);
+  printf("%d\n",size );
 
-    //sendControlPackage(file, );
+  sendControlPackage(fileName,size);
+}
+int receiveData() {
 
-    while(read(fdFileToSend, buf, 8)){
-      //  llwrite(fd, buf, 8)
-    }
+  char fileName[255];
 
+  read(fd, fileName, 255);
+
+  printf(" FILE NAME:%s\n",fileName);
+}
+
+//TODO: Send control package with file name anda file size
+int sendControlPackage(char * fileName, int size){
 
 }
-int receiveData(){
 
-}
 
-int llwrite(int fd, char * buffer, int length){
-
-}
+int llwrite(int fd, char *buffer, int length) {}
 
 int llopen(char *SerialPort, enum Functionality func) {
 
