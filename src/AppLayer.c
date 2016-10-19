@@ -1,5 +1,7 @@
 #include "AppLayer.h"
 #include "DataLinkLayer.h"
+#include "Utilities.h"
+#include <sys/stat.h>
 #include <fcntl.h>
 #include <signal.h>
 #include <stdio.h>
@@ -21,7 +23,46 @@ int appLayer(char *SerialPort, enum Functionality func) {
 
   llopen(SerialPort, func);
 
+  if(func == TRANSMITER){
+    sendData();
+  }else{
+    receiveData();
+  }
+
+
   return 1;
+}
+
+int sendData(){
+
+    char file[255];
+    file=getFile();
+    printf("%s\n",file );;
+    char buf[255];
+    int fdFileToSend = open(file, O_RDONLY);
+    printf("opend file" );
+
+    //Determine file sizeo
+    struct stat st;
+    stat(file, &st);
+    int fileSize=st.st_size;
+    printf("file size:" );
+    printf("%s\n", fileSize );
+
+    //sendControlPackage(file, );
+
+    while(read(fdFileToSend, buf, 8)){
+      //  llwrite(fd, buf, 8)
+    }
+
+
+}
+int receiveData(){
+
+}
+
+int llwrite(int fd, char * buffer, int length){
+
 }
 
 int llopen(char *SerialPort, enum Functionality func) {

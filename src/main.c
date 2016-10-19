@@ -1,9 +1,11 @@
 #include "AppLayer.h"
 #include "DataLinkLayer.h"
+#include "Utilities.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
+
 
 int main(int argc, char **argv) {
 
@@ -14,6 +16,8 @@ int main(int argc, char **argv) {
            "receiver (arguement = 1)\n");
     exit(1);
   }
+
+
 
   char serialPort[255] = "/dev/ttyS";
   strcat(serialPort, argv[2]);
