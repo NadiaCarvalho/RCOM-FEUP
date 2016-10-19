@@ -12,6 +12,7 @@
 #define FLAG 0x7E
 #define A 0x03
 #define C_SET 0x03
+#define C_UA 0x07
 
 struct termios oldtio, newtio;
 
@@ -23,7 +24,7 @@ typedef enum { START, FLAG_STATE, A_STATE, C_STATE, BCC, SUCCESS } ReadingArrayS
 // SET = F-A-C-BCC-F
 static char SET[5] = {FLAG, A, C_SET, A ^ C_SET, FLAG};
 
-static char UA[5] = {FLAG, A, C_SET, A ^ C_SET, FLAG};
+static char UA[5] = {FLAG, A, C_UA, A ^ C_UA, FLAG};
 
 void atender();
 
