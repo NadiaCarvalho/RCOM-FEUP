@@ -20,13 +20,12 @@ void atende() {
       // send SET
       printf("SENDER: sending SET\n");
       write(fd, SET, 5);
-	}
-     else if (tries == 4) {
-        printf("Timeout: UA not acknowledge");
-        exit(1);
-      }
+    } else if (tries == 4) {
+      printf("Timeout: UA not acknowledge");
+      exit(1);
     }
   }
+}
 
 ReadingArrayState nextState(ReadingArrayState state) {
   switch (state) {
@@ -123,7 +122,7 @@ int readingArray(int fd, char compareTo[]) {
   int i = 0;
   while (1) {
     res = read(fd, buf, 1);
-	printf("0x%08X", buf[0]);
+    printf("0x%08X", buf[0]);
     if (buf[0] == compareTo[i]) {
       i++;
       state = nextState(state);
@@ -173,4 +172,83 @@ int llopenReceiver(char *SerialPort) {
 
   printf("Sent UA frame.");
   return 0;
+}
+
+int llwrite(int fd, unsigned char *buffer, int length) {
+  unsigned char frame[255];
+  int sequenceNumber = 0;
+
+  frame[0] = FLAG;
+  frame[1] = A;
+  frame[2] = (unsigned char)sequenceNumber;
+  frame[3] = 0; // bcc1
+
+  int i;
+  for (i = 0; i < length; i++) {
+    frame[i + 4] = buffer[i];
+  }
+
+  frame[length + 4] = 0; // bcc2
+  frame[length + 5] = FLAG;
+
+  write(fd, frame, length + 6);
+}
+
+int llread(int fd, unsigned char *buffer) {
+/*  unsigned char frame[255];
+  int fileSize;
+  int i;
+  unsigned char size[255];
+  unsigned char fileName[255];
+
+  read(fd, frame, 1);
+  if (frame[0] != FLAG) {
+    // reenvia
+  }
+  read(fd, buffer, 1);
+  if (frame[0] != A) {
+    // reenvia
+  }
+  read(fd, frame, 1);
+  if (frame[0] != 0) {
+    // reenvia
+  }
+  read(fd, frame, 1);
+  if (frame[0] != 0) {
+    // reenvia
+  }
+
+  read(fd, frame, 1);
+  if (frame[0] == 2) { // start control packet
+    read(fd, frame, 1);
+    if (frame[0] == 0) {
+      read(fd, frame, 1);
+      fileSize = atoi(frame[0]);
+      read(fd, frame, fileSize);
+      for (i = 0; i < fileSize; i++) {
+        size[i] = frame[i];
+      }
+    }
+    read(fd, frame, 1);
+    if(frame[0] == 1){
+      read(fd, frame, 1);
+      fileSize = atoi(frame[0]);
+      read(fd, frame, fileSize);
+      for(i=0;i<fileSize; i++){
+        fileName[i] = frame[i];
+      }
+    }
+  }
+
+  read(fd, frame, 1); //bcc2
+/*  if(frame[0])!=0){
+    //
+  }*/
+  /*read(fd, frame, 1);
+  if(frame[0] != FLAG){
+    //
+  }
+  */
+  printf("resultado\n");
+
 }

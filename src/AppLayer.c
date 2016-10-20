@@ -45,46 +45,62 @@ int sendData() {
 
   // Determine file size
   int size;
-  size= fileSize(fp);
-  printf("%d\n",size );
+  size = fileSize(fp);
+  printf("%d\n", size);
 
-  sendControlPackage(START, fileName,size);
+  unsigned char fileSize[50];
+  sprintf(fileSize, "%d", size);
+
+  int packetSize = 5 + strlen(fileName) + strlen(fileSize);
+
+  unsigned char controlPacket[packetSize];
+  int controlPacketSize = sendControlPackage(START_CTRL_PACKET, fileName, size, controlPacket);
+
+  llwrite(fd, controlPacket, controlPacketSize);
 }
 int receiveData() {
 
   char fileName[255];
 
-  read(fd, fileName, 255);
-
-  printf(" FILE NAME:%s\n",fileName);
+  //read(fd, fileName, 255);
+  unsigned char buffer[255];
+  llread(fd, buffer);
+  printf(" FILE NAME:%s\n", fileName);
 }
 
-//TODO: Send control package with file name anda file size
-int sendControlPackage(int state, char * fileName, int size){
+// TODO: Send control package with file name anda file size
+int sendControlPackage(int state, char *fileName, int size, unsigned char *controlPacket) {
 
-    char fileSize[50];
-    sprintf(fileSize,"%d",size);
+  //TODO: refector repeated code
+  unsigned char fileSize[50];
+  sprintf(fileSize, "%d", size);
 
-    int packetSize = 5 + strlen(fileName) + strlen(fileSize);
+  int controlPacketSize = 0;
 
-    char controlPacket[packetSize];
+  controlPacket[0] = (unsigned char)state;
+  controlPacket[1] = (unsigned char)0; // 0-tamanho do ficheiro
+  controlPacket[2] = (unsigned char)strlen(fileSize);
+  controlPacketSize = 3;
+  // um char é sempre um byte?
+  int i;
+  for (i = 0; i < strlen(fileSize); i++) {
+    controlPacket[i + 3] = fileSize[i];
+  }
+  controlPacketSize += strlen(fileSize);
 
-    controlPacket[0]=state + '0'; // 48 is the ascii code for '0'
-    controlPacket[1]=0 + '0'; //0-tamanho do ficheiro
-    controlPacket[2]=strlen(fileSize) + '0';
-    //um char é sempre um byte?
-    int i;
-    for(i=0; i<strlen(fileSize); i++){
-      controlPacket[i+3]=fileSize[i];
-    }
-    printf("%d\n", strlen(controlPacket));
+  controlPacket[controlPacketSize - 1] =
+      (unsigned char)1; // 0-tamanho do ficheiro
+  controlPacket[controlPacketSize] = (unsigned char)strlen(fileName);
+  controlPacketSize += 2;
+
+  for (i = 0; i < strlen(fileName); i++) {
+    controlPacket[controlPacketSize + i] = fileName[i];
+  }
+  controlPacketSize += strlen(fileName);
 
 
-
+  return controlPacketSize;
 }
-
-
-int llwrite(int fd, char *buffer, int length) {}
 
 int llopen(char *SerialPort, enum Functionality func) {
 

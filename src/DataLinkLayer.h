@@ -40,4 +40,8 @@ int llopenTransmiter(char *SerialPort);
 
 int llopenReceiver(char *SerialPort);
 
+int llwrite(int fd, unsigned char * buffer, int length);
+
+int llread(int fd, unsigned char *buffer);
+
 #endif
