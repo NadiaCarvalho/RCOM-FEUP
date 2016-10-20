@@ -18,7 +18,6 @@ int main(int argc, char **argv) {
   }
 
 
-
   char serialPort[255] = "/dev/ttyS";
   strcat(serialPort, argv[2]);
 

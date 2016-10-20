@@ -48,7 +48,7 @@ int sendData() {
   size= fileSize(fp);
   printf("%d\n",size );
 
-  sendControlPackage(fileName,size);
+  sendControlPackage(START, fileName,size);
 }
 int receiveData() {
 
@@ -60,7 +60,26 @@ int receiveData() {
 }
 
 //TODO: Send control package with file name anda file size
-int sendControlPackage(char * fileName, int size){
+int sendControlPackage(int state, char * fileName, int size){
+
+    char fileSize[50];
+    sprintf(fileSize,"%d",size);
+
+    int packetSize = 5 + strlen(fileName) + strlen(fileSize);
+
+    char controlPacket[packetSize];
+
+    controlPacket[0]=state + '0'; // 48 is the ascii code for '0'
+    controlPacket[1]=0 + '0'; //0-tamanho do ficheiro
+    controlPacket[2]=strlen(fileSize) + '0';
+    //um char é sempre um byte?
+    int i;
+    for(i=0; i<strlen(fileSize); i++){
+      controlPacket[i+3]=fileSize[i];
+    }
+    printf("%d\n", strlen(controlPacket));
+
+
 
 }
 
