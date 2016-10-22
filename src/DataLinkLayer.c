@@ -191,24 +191,29 @@ int llwrite(int fd, unsigned char *buffer, int length) {
   frame[length + 4] = 0; // bcc2
   frame[length + 5] = FLAG;
 
+	printf("%02X\n", frame);
+
   write(fd, frame, length + 6);
 }
 
 int llread(int fd, unsigned char *buffer) {
-/*  unsigned char frame[255];
-  int fileSize;
+ unsigned char frame[255];
+  int fileS;
   int i;
-  unsigned char size[255];
+  //unsigned char size[255];
   unsigned char fileName[255];
+  printf("\nVou começar a ler\n");
+
 
   read(fd, frame, 1);
   if (frame[0] != FLAG) {
     // reenvia
   }
-  read(fd, buffer, 1);
+  read(fd, frame, 1);
   if (frame[0] != A) {
     // reenvia
   }
+  //TODO : Implementar controlo de fluxo
   read(fd, frame, 1);
   if (frame[0] != 0) {
     // reenvia
@@ -220,7 +225,8 @@ int llread(int fd, unsigned char *buffer) {
 
   read(fd, frame, 1);
   if (frame[0] == 2) { // start control packet
-    read(fd, frame, 1);
+   fileS = receiveControlPacket(fd);
+  /*  read(fd, frame, 1);
     if (frame[0] == 0) {
       read(fd, frame, 1);
       fileSize = atoi(frame[0]);
@@ -237,18 +243,63 @@ int llread(int fd, unsigned char *buffer) {
       for(i=0;i<fileSize; i++){
         fileName[i] = frame[i];
       }
-    }
+    }*/
+  }
+  else if(frame[0] == 1){
+    //receiveDataPacket(fd);
+  }
+  else if(frame[0] == 3){
+    receiveControlPacket(fd);
   }
 
-  read(fd, frame, 1); //bcc2
-/*  if(frame[0])!=0){
-    //
-  }*/
-  /*read(fd, frame, 1);
-  if(frame[0] != FLAG){
-    //
-  }
-  */
   printf("resultado\n");
 
+}
+
+int receiveControlPacket(int fd){
+
+  unsigned char frame[255];
+  unsigned char filename[255];
+  int nameSize, i, size;
+  unsigned char fS[255];
+  unsigned char fileSize;
+
+  // TODO : ter cuidado com a leitura dos tamanhos
+
+  read(fd, frame, 1);
+  printf("tipo de ficheiro : %02X\n", frame[0]);
+
+    read(fd, &fileSize, 1);
+    printf("N bytes: %X\n", fileSize);
+    unsigned char stringSize[fileSize];
+    for(i=0; i<fileSize; i++){
+      read(fd, stringSize + i, 1);
+      printf("%d : %X\n", i,stringSize[i]);
+
+    }
+    memcpy(&size, &stringSize, (int)fileSize);
+
+    printf("Size: %X\n", size);
+
+    read(fd, frame, 1);
+
+    read(fd,&nameSize, 1);
+    printf("tamanho da string : %d\n", nameSize);
+    for(i=0; i<nameSize; i++){
+      read(fd, frame, 1);
+      filename[i] = frame[0];
+      printf("%d : %X\n", i,filename[i]);
+    }
+
+    printf("%s\n", filename);
+
+    read(fd, frame, 1); //bcc2
+
+    printf("quase a terminar\n" );
+
+    read(fd, frame, 1); //flag
+
+    printf("acabei de ler\n" );
+
+    return size;
 }
