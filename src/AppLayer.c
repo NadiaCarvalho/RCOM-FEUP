@@ -73,7 +73,10 @@ int sendControlPackage(int state, char *fileName, int size, unsigned char *contr
 
   //TODO: refector repeated code
   unsigned char fileSize[50];
-  sprintf(fileSize, "%d", size);
+  //	sprintf(fileSize, "%X", size);
+	memcpy(fileSize,&size, sizeof(size));
+	printf("%X",fileSize[0]);
+	printf("%X",fileSize[1]);
 
   int controlPacketSize = 0;
 
@@ -88,10 +91,11 @@ int sendControlPackage(int state, char *fileName, int size, unsigned char *contr
   }
   controlPacketSize += strlen(fileSize);
 
-  controlPacket[controlPacketSize - 1] =
+  controlPacket[controlPacketSize] =
       (unsigned char)1; // 0-tamanho do ficheiro
+	controlPacketSize++;
   controlPacket[controlPacketSize] = (unsigned char)strlen(fileName);
-  controlPacketSize += 2;
+	controlPacketSize++;
 
   for (i = 0; i < strlen(fileName); i++) {
     controlPacket[controlPacketSize + i] = fileName[i];
@@ -101,7 +105,6 @@ int sendControlPackage(int state, char *fileName, int size, unsigned char *contr
 
   return controlPacketSize;
 }
-
 int llopen(char *SerialPort, enum Functionality func) {
 
   switch (func) {

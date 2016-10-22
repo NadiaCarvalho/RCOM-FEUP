@@ -186,14 +186,18 @@ int llwrite(int fd, unsigned char *buffer, int length) {
   int i;
   for (i = 0; i < length; i++) {
     frame[i + 4] = buffer[i];
+	//printf("%d : %02X \n", i, frame[i + 4]);
   }
 
   frame[length + 4] = 0; // bcc2
   frame[length + 5] = FLAG;
 
-	printf("%02X\n", frame);
+	for (i = 0; i < length +6; i++) {
+	printf("%d : %02X \n", i, frame[i]);
+  	}
 
   write(fd, frame, length + 6);
+
 }
 
 int llread(int fd, unsigned char *buffer) {
