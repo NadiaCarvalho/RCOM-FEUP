@@ -11,6 +11,9 @@
 #define FALSE 0
 #define TRUE 1
 #define FLAG 0x7E
+#define ESC 0x7D
+#define FLAG_HIDE_BYTE 0x5E
+#define ESC_HIDE_BYTE 0x5D
 #define A 0x03
 #define C_SET 0x03
 #define C_UA 0x07
