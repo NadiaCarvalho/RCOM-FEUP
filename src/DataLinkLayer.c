@@ -219,8 +219,6 @@ int llread(int fd, unsigned char *buffer) {
   if(frame[FIELD_CONTROL] == NUMBER_OF_SEQUENCE_0 || frame[FIELD_CONTROL] == NUMBER_OF_SEQUENCE_1){
     processingDataFrame(frame, &file);
   }
-  printf("Tamanho : %d\n", file.size);
-  printf("Nome : %s\n", file.filename);
 
   printf("Terminei de ler\n");
 }
@@ -277,7 +275,7 @@ int processingDataFrame(unsigned char *frame, FileInfo* file){
 int stuffingFrame(unsigned char *frame, int frameSize){
   int i;
   int j;
-  
+
   for(i = 1; i < frameSize-1; i++){
     if(frame[i] == FLAG){
       frame[i] = ESC;

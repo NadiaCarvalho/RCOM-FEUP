@@ -57,4 +57,10 @@ int readingFrame(int fd, unsigned char* frame);
 
 int processingDataFrame(unsigned char *frame, FileInfo* file);
 
+int stuffingFrame(unsigned char *frame, int frameSize);
+
+int shiftFrame(unsigned char *frame, int i, int frameSize, int shiftDirection);
+
+int destuffingFrame(unsigned char *frame);
+
 #endif
