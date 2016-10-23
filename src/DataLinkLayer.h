@@ -46,6 +46,6 @@ int llwrite(int fd, unsigned char * buffer, int length);
 
 int llread(int fd, unsigned char *buffer);
 
-int receiveControlPacket(int fd);
+int receiveControlPacket(int fd, unsigned char *filename);
 
 #endif

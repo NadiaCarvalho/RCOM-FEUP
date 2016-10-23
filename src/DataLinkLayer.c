@@ -202,6 +202,7 @@ int llwrite(int fd, unsigned char *buffer, int length) {
 
 int llread(int fd, unsigned char *buffer) {
  unsigned char frame[255];
+ unsigned char filename[255];
   int fileS;
   int i;
   //unsigned char size[255];
@@ -229,7 +230,10 @@ int llread(int fd, unsigned char *buffer) {
 
   read(fd, frame, 1);
   if (frame[0] == 2) { // start control packet
-   fileS = receiveControlPacket(fd);
+   fileS = receiveControlPacket(fd, &filename);
+   printf("tamanho : %d\n", fileS);
+   printf("nome : %s\n", &filename);
+   printf("test : %c\n", filename[11]);
   /*  read(fd, frame, 1);
     if (frame[0] == 0) {
       read(fd, frame, 1);
@@ -253,21 +257,20 @@ int llread(int fd, unsigned char *buffer) {
     //receiveDataPacket(fd);
   }
   else if(frame[0] == 3){
-    receiveControlPacket(fd);
+    receiveControlPacket(fd, &filename);
   }
 
   printf("resultado\n");
 
 }
 
-int receiveControlPacket(int fd){
+int receiveControlPacket(int fd, unsigned char *filename){
 
   unsigned char frame[255];
   int i, j;
   unsigned int size;
   unsigned char fileSize, nameSize;
   unsigned char stringSize[fileSize];
-  unsigned char filename[nameSize];
 
   // TODO : ter cuidado com a leitura dos tamanhos
 
@@ -291,10 +294,10 @@ int receiveControlPacket(int fd){
     printf("tamanho da string : %d\n", nameSize);
     for(j=0; j<nameSize; j++){
       read(fd, filename+j, 1);
-      printf("%d : %X\n", j,filename[j]);
+      printf("%d : %02X\n", j,filename+j);
     }
-
-    printf("%s\n", filename);
+    filename[nameSize] = "\0";
+    printf("filename : %s\n", filename);
 
     read(fd, frame, 1); //bcc2
 
