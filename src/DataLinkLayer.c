@@ -156,7 +156,7 @@ int llopenTransmiter(char *SerialPort) {
     alarm(0);
   }
 
-  printf("Comunication established.");
+  printf("\nComunication established.\n");
   return 0;
 }
 
@@ -164,10 +164,10 @@ int llopenReceiver(char *SerialPort) {
   char buf[255];
 
   strcpy(buf, "");
-  printf("RECEIVER: reading SET\n");
+  printf("\nRECEIVER: reading SET\n");
   readingArray(fd, SET);
 
-  printf("RECEIVER: sending UA\n");
+  printf("\nRECEIVER: sending UA\n");
   write(fd, UA, 5);
 
   printf("Sent UA frame.");
@@ -263,10 +263,11 @@ int llread(int fd, unsigned char *buffer) {
 int receiveControlPacket(int fd){
 
   unsigned char frame[255];
-  unsigned char filename[255];
-  int nameSize, i, size;
-  unsigned char fS[255];
-  unsigned char fileSize;
+  int i, j;
+  unsigned int size;
+  unsigned char fileSize, nameSize;
+  unsigned char stringSize[fileSize];
+  unsigned char filename[nameSize];
 
   // TODO : ter cuidado com a leitura dos tamanhos
 
@@ -275,7 +276,6 @@ int receiveControlPacket(int fd){
 
     read(fd, &fileSize, 1);
     printf("N bytes: %X\n", fileSize);
-    unsigned char stringSize[fileSize];
     for(i=0; i<fileSize; i++){
       read(fd, stringSize + i, 1);
       printf("%d : %X\n", i,stringSize[i]);
@@ -283,16 +283,15 @@ int receiveControlPacket(int fd){
     }
     memcpy(&size, &stringSize, (int)fileSize);
 
-    printf("Size: %X\n", size);
+    printf("Size: %d\n", size);
 
     read(fd, frame, 1);
 
     read(fd,&nameSize, 1);
     printf("tamanho da string : %d\n", nameSize);
-    for(i=0; i<nameSize; i++){
-      read(fd, frame, 1);
-      filename[i] = frame[0];
-      printf("%d : %X\n", i,filename[i]);
+    for(j=0; j<nameSize; j++){
+      read(fd, filename+j, 1);
+      printf("%d : %X\n", j,filename[j]);
     }
 
     printf("%s\n", filename);

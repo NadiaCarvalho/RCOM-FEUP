@@ -41,7 +41,7 @@ int sendData() {
   if (fp == NULL) {
     printf("Could not open file  test.c");
   }
-  printf("opened file");
+  printf("opened file\n");
 
   // Determine file size
   int size;
@@ -65,7 +65,6 @@ int receiveData() {
   //read(fd, fileName, 255);
   unsigned char buffer[255];
   llread(fd, buffer);
-  printf(" FILE NAME:%s\n", fileName);
 }
 
 // TODO: Send control package with file name anda file size
@@ -75,8 +74,6 @@ int sendControlPackage(int state, char *fileName, int size, unsigned char *contr
   unsigned char fileSize[50];
   //	sprintf(fileSize, "%X", size);
 	memcpy(fileSize,&size, sizeof(size));
-	printf("%X",fileSize[0]);
-	printf("%X",fileSize[1]);
 
   int controlPacketSize = 0;
 
