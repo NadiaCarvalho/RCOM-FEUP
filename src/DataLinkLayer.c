@@ -201,111 +201,70 @@ int llwrite(int fd, unsigned char *buffer, int length) {
 }
 
 int llread(int fd, unsigned char *buffer) {
- unsigned char frame[255];
- unsigned char filename[255];
-  int fileS;
-  int i;
-  //unsigned char size[255];
-  unsigned char fileName[255];
-  printf("\nVou começar a ler\n");
-
-
-  read(fd, frame, 1);
-  if (frame[0] != FLAG) {
-    // reenvia
-  }
-  read(fd, frame, 1);
-  if (frame[0] != A) {
-    // reenvia
-  }
-  //TODO : Implementar controlo de fluxo
-  read(fd, frame, 1);
-  if (frame[0] != 0) {
-    // reenvia
-  }
-  read(fd, frame, 1);
-  if (frame[0] != 0) {
-    // reenvia
-  }
-
-  read(fd, frame, 1);
-  if (frame[0] == 2) { // start control packet
-   fileS = receiveControlPacket(fd, &filename);
-   printf("tamanho : %d\n", fileS);
-   printf("nome : %s\n", &filename);
-   printf("test : %c\n", filename[11]);
-  /*  read(fd, frame, 1);
-    if (frame[0] == 0) {
-      read(fd, frame, 1);
-      fileSize = atoi(frame[0]);
-      read(fd, frame, fileSize);
-      for (i = 0; i < fileSize; i++) {
-        size[i] = frame[i];
-      }
-    }
-    read(fd, frame, 1);
-    if(frame[0] == 1){
-      read(fd, frame, 1);
-      fileSize = atoi(frame[0]);
-      read(fd, frame, fileSize);
-      for(i=0;i<fileSize; i++){
-        fileName[i] = frame[i];
-      }
-    }*/
-  }
-  else if(frame[0] == 1){
-    //receiveDataPacket(fd);
-  }
-  else if(frame[0] == 3){
-    receiveControlPacket(fd, &filename);
-  }
-
-  printf("resultado\n");
-
-}
-
-int receiveControlPacket(int fd, unsigned char *filename){
 
   unsigned char frame[255];
-  int i, j;
-  unsigned int size;
-  unsigned char fileSize, nameSize;
-  unsigned char stringSize[fileSize];
+  unsigned char filename[255];
+  int fileS;
+  int over = 0;
+  unsigned char fileName[255];
+  FileInfo file;
+  printf("\nVou começar a ler\n");
 
-  // TODO : ter cuidado com a leitura dos tamanhos
+  int frameSize = readingFrame(fd, frame);
 
-  read(fd, frame, 1);
-  printf("tipo de ficheiro : %02X\n", frame[0]);
+  // Processing frame
+  if(frame[FIELD_CONTROL] == NUMBER_OF_SEQUENCE_0 || frame[FIELD_CONTROL] == NUMBER_OF_SEQUENCE_1){
+    processingDataFrame(frame, &file);
+  }
 
-    read(fd, &fileSize, 1);
-    printf("N bytes: %X\n", fileSize);
-    for(i=0; i<fileSize; i++){
-      read(fd, stringSize + i, 1);
-      printf("%d : %X\n", i,stringSize[i]);
+  printf("Terminei de ler\n");
+}
 
+int readingFrame(int fd, unsigned char* frame){
+  unsigned char oneByte;
+  int over = 0;
+  int i = 0;
+
+  // reading the first flag
+  read(fd, &oneByte, 1);
+  frame[i] = oneByte;
+  i++;
+
+  while(!over){
+    read(fd, &oneByte, 1);
+    frame[i] = oneByte;
+
+    // testing if is the last character
+    if(oneByte == FLAG){
+      over = 1;
     }
-    memcpy(&size, &stringSize, (int)fileSize);
+    i++;
+  }
 
-    printf("Size: %d\n", size);
+  return i; // returning the size of the frame
+}
 
-    read(fd, frame, 1);
+int processingDataFrame(unsigned char *frame, FileInfo* file){
+  int frameIndex = 4; // Where the packet starts
+  int i;
+  int numberOfBytes;
 
-    read(fd,&nameSize, 1);
-    printf("tamanho da string : %d\n", nameSize);
-    for(j=0; j<nameSize; j++){
-      read(fd, filename+j, 1);
-      printf("%d : %02X\n", j,filename+j);
-    }
-    filename[nameSize] = "\0";
-    printf("filename : %s\n", filename);
+  // Testing to see if is a control packet
+  if(frame[frameIndex] == 2 || frame[frameIndex] == 3){
+    frameIndex+= 2; // TODO : Estou a ignorar o T
 
-    read(fd, frame, 1); //bcc2
+    numberOfBytes = frame[frameIndex];
+    frameIndex++; // taking frame index to de begginning of the data
+    memcpy(&((*file).size), frame+frameIndex, numberOfBytes);
 
-    printf("quase a terminar\n" );
+    frameIndex += numberOfBytes + 1; // TODO : Estou a ignorar o T
 
-    read(fd, frame, 1); //flag
+    numberOfBytes = frame[frameIndex];
+    frameIndex++;
+    memcpy(&((*file).filename), frame+frameIndex, numberOfBytes);
 
-    printf("acabei de ler\n" );
+    frameIndex += numberOfBytes;
 
-    return size;
+    // TODO : processar o bcc2
+  }
 }

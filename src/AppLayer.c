@@ -34,27 +34,26 @@ int appLayer(char *SerialPort, enum Functionality func) {
 
 int sendData() {
 
-  char *fileName = malloc(sizeof(char) * 255);
-  getFile(fileName);
+  FileInfo file;
+  getFile(file.filename);
   FILE *fp;
-  fp = fopen(fileName, "rb");
+  fp = fopen(file.filename, "rb");
   if (fp == NULL) {
     printf("Could not open file  test.c");
   }
-  printf("opened file\n");
+  printf("opened file %s\n", file.filename);
 
   // Determine file size
-  int size;
-  size = fileSize(fp);
-  printf("%d\n", size);
+  file.size = fileSize(fp);
+  printf("%d\n", file.size);
 
   unsigned char fileSize[50];
-  sprintf(fileSize, "%d", size);
+  memcpy(fileSize,&file.size, sizeof(file.size));
 
-  int packetSize = 5 + strlen(fileName) + strlen(fileSize);
+  int packetSize = 5 + strlen(file.filename) + strlen(fileSize);
 
   unsigned char controlPacket[packetSize];
-  int controlPacketSize = sendControlPackage(START_CTRL_PACKET, fileName, size, controlPacket);
+  int controlPacketSize = sendControlPackage(START_CTRL_PACKET, file, controlPacket);
 
   llwrite(fd, controlPacket, controlPacketSize);
 }
@@ -67,13 +66,12 @@ int receiveData() {
   llread(fd, buffer);
 }
 
-// TODO: Send control package with file name anda file size
-int sendControlPackage(int state, char *fileName, int size, unsigned char *controlPacket) {
+int sendControlPackage(int state, FileInfo file, unsigned char *controlPacket) {
 
-  //TODO: refector repeated code
+  //TODO: refracting repeated code
   unsigned char fileSize[50];
-  //	sprintf(fileSize, "%X", size);
-	memcpy(fileSize,&size, sizeof(size));
+
+	memcpy(fileSize,&file.size, sizeof(file.size));
 
   int controlPacketSize = 0;
 
@@ -91,13 +89,13 @@ int sendControlPackage(int state, char *fileName, int size, unsigned char *contr
   controlPacket[controlPacketSize] =
       (unsigned char)1; // 0-tamanho do ficheiro
 	controlPacketSize++;
-  controlPacket[controlPacketSize] = (unsigned char)strlen(fileName);
+  controlPacket[controlPacketSize] = (unsigned char)strlen(file.filename);
 	controlPacketSize++;
 
-  for (i = 0; i < strlen(fileName); i++) {
-    controlPacket[controlPacketSize + i] = fileName[i];
+  for (i = 0; i < strlen(file.filename); i++) {
+    controlPacket[controlPacketSize + i] = file.filename[i];
   }
-  controlPacketSize += strlen(fileName);
+  controlPacketSize += strlen(file.filename);
 
 
   return controlPacketSize;

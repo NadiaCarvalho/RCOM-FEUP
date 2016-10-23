@@ -1,6 +1,7 @@
 #ifndef DATALINKLAYER_H
 #define DATALINKLAYER_H
 
+#include "AppLayer.h"
 #include <stdio.h>
 #include <termios.h>
 
@@ -15,6 +16,9 @@
 #define C_UA 0x07
 #define FILE_SIZE 0
 #define FILE_NAME 1
+#define NUMBER_OF_SEQUENCE_0 0x00
+#define NUMBER_OF_SEQUENCE_1 0x40
+#define FIELD_CONTROL 2
 
 struct termios oldtio, newtio;
 
@@ -46,6 +50,8 @@ int llwrite(int fd, unsigned char * buffer, int length);
 
 int llread(int fd, unsigned char *buffer);
 
-int receiveControlPacket(int fd, unsigned char *filename);
+int readingFrame(int fd, unsigned char* frame);
+
+int processingDataFrame(unsigned char *frame, FileInfo* file);
 
 #endif
