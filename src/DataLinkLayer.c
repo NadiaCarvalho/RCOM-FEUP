@@ -192,8 +192,8 @@ int llwrite(int fd, unsigned char *buffer, int length) {
   frame[length + 5] = FLAG;
 
 	for (i = 0; i < length +6; i++) {
-	printf("%d : %02X \n", i, frame[i]);
-  	}
+	   printf("%d : %02X \n", i, frame[i]);
+  }
 
   int frameSize = stuffingFrame(frame, length +6);
 
@@ -205,22 +205,26 @@ int llread(int fd, unsigned char *buffer) {
 
   unsigned char frame[255];
   int over = 0;
+  int frameSize;
+  int ret;
   FileInfo file;
   printf("\nVou começar a ler\n");
 
-  int frameSize = readingFrame(fd, frame);
+  //while(!over){
 
-  destuffingFrame(frame);
+    frameSize = readingFrame(fd, frame);
 
-  // Processing frame
-  if(frame[FIELD_CONTROL] == NUMBER_OF_SEQUENCE_0 || frame[FIELD_CONTROL] == NUMBER_OF_SEQUENCE_1){
-    processingDataFrame(frame, &file);
-  }
+    destuffingFrame(frame);
 
-  //FIXME: remove printf
-  printf("Tamanho : %d\n", file.size);
-  printf("Nome : %s\n", file.filename);
+    // Processing frame
+    if(frame[FIELD_CONTROL] == NUMBER_OF_SEQUENCE_0 || frame[FIELD_CONTROL] == NUMBER_OF_SEQUENCE_1){
+      ret = processingDataFrame(frame, &file);
+    }
 
+    if(ret == END_CTRL_PACKET){
+      over = 1;
+    }
+  //}
   printf("Terminei de ler\n");
 }
 
@@ -252,9 +256,11 @@ int processingDataFrame(unsigned char *frame, FileInfo* file){
   int frameIndex = 4; // Where the packet starts
   int i;
   int numberOfBytes;
+  int ret;
 
   // Testing to see if is a control packet
   if(frame[frameIndex] == START_CTRL_PACKET || frame[frameIndex] == END_CTRL_PACKET){
+    ret = frame[frameIndex];
     frameIndex+= 2; // TODO : Estou a ignorar o T
 
     numberOfBytes = frame[frameIndex];
@@ -270,7 +276,28 @@ int processingDataFrame(unsigned char *frame, FileInfo* file){
     frameIndex += numberOfBytes;
 
     // TODO : processar o bcc2
+
+    //FIXME: remove printf
+    printf("Tamanho : %d\n", file->size);
+    printf("Nome : %s\n", file->filename);
   }
+  else if(frame[frameIndex] == DATA_CTRL_PACKET){
+    ret = frame[frameIndex];
+    frameIndex += 2; // TODO : Estou a ignorar numero de sequencia
+
+    int l1 = frame[frameIndex]; // TODO : Fazer k = 256 * L2 + L1
+    frameIndex++;
+    int l2 = frame[frameIndex];
+    frameIndex++;
+
+    int k = 256 * l2 + l1;
+
+    for(i = 0; i < k; i++){
+      // read(fileDescripor, frame+frameIndex+i,1);
+    }
+  }
+
+  return ret;
 }
 
 int stuffingFrame(unsigned char *frame, int frameSize){
