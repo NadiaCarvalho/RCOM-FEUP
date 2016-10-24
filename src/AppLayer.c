@@ -61,11 +61,18 @@ int sendData() {
 
   int dataPacketSize = DATA_SIZE + 4;
   unsigned char dataPacket[dataPacketSize];
+  int ret;
 
+  while(ret != 0){
+    ret = sendDataPackage(dataPacket, fp, 0);
+    llwrite(fd, dataPacket, dataPacketSize);
+    // TODO : Implementar o controlo de fluxo
+  }
 
-  int ret = sendDataPackage(dataPacket, fp, 0);
-  llwrite(fd, dataPacket, dataPacketSize);
+  controlPacketSize =
+      sendControlPackage(END_CTRL_PACKET, file, controlPacket);
 
+  llwrite(fd, controlPacket, controlPacketSize);
 
 }
 int receiveData() {
@@ -113,7 +120,14 @@ int sendControlPackage(int state, FileInfo file, unsigned char *controlPacket) {
 int sendDataPackage(unsigned char *dataPacket, FILE *fp, int sequenceNumber) {
 
   unsigned char buffer[DATA_SIZE];
-  fread(buffer, sizeof(char), DATA_SIZE, fp);
+  int ret;
+  ret = fread(buffer, sizeof(char), DATA_SIZE, fp);
+  if(ret == 0){
+    return 0;
+  }
+  else if( ret < 0){
+    return -1;
+  }
 
 //K=256 * L1 + L2
 
@@ -122,7 +136,7 @@ int sendDataPackage(unsigned char *dataPacket, FILE *fp, int sequenceNumber) {
   //L1
   dataPacket[2]=0;
   //L2
-  dataPacket[3]=100;
+  dataPacket[3]=ret;
 
   int j;
   for(j=0; j<DATA_SIZE;j++){

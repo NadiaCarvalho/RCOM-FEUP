@@ -264,6 +264,7 @@ int processingDataFrame(unsigned char *frame, FileInfo* file){
   // Testing to see if is a control packet
   if(frame[frameIndex] == START_CTRL_PACKET || frame[frameIndex] == END_CTRL_PACKET){
     ret = frame[frameIndex];
+    printf("Ret : %d\n", ret);
     frameIndex+= 2; // TODO : Estou a ignorar o T
 
     numberOfBytes = frame[frameIndex];
@@ -292,15 +293,15 @@ int processingDataFrame(unsigned char *frame, FileInfo* file){
     frameIndex++;
     int l1 = frame[frameIndex];
     frameIndex++;
-    printf("l1 : %d\n" , l1);
-    printf("l2 : %d\n" , l2);
+  //  printf("l1 : %d\n" , l1);
+//    printf("l2 : %d\n" , l2);
     int k = 256 * (int)l2 + (int)l1;
-    printf("k : %d\n" , k);
+//    printf("k : %d\n" , k);
     unsigned char data[MAX_SIZE];
 
-    for(i = 0;i < k; i++){
+  /*  for(i = 0;i < k; i++){
         printf("%d : %X\n", i, frame[frameIndex+i]);
-    }
+    }*/
   }
 
   return ret;
