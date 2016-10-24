@@ -9,7 +9,7 @@
 #include <termios.h>
 #include <unistd.h>
 
-int getFile(char * filepath);
+int getFile(char *filepath);
 
-int fileSize(FILE * fd);
+int fileSize(FILE *fd);
 #endif

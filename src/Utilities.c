@@ -8,7 +8,7 @@
 #include <termios.h>
 #include <unistd.h>
 
-int getFile(char * filepath){
+int getFile(char *filepath) {
 
   printf("Enter file path:");
   scanf("%s", filepath);
@@ -16,10 +16,10 @@ int getFile(char * filepath){
   return 1;
 }
 
-int fileSize(FILE * fd) {
-   struct stat s;
-   if (fstat(fileno(fd), &s) == -1) {
-      return(-1);
-   }
-   return(s.st_size);
+int fileSize(FILE *fd) {
+  struct stat s;
+  if (fstat(fileno(fd), &s) == -1) {
+    return (-1);
+  }
+  return (s.st_size);
 }

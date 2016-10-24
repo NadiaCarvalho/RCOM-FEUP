@@ -144,8 +144,7 @@ int llopenTransmiter(char *SerialPort) {
 
   // send SET
   res = write(fd, SET, 5);
-  printf("SENDER: sending SET\n",
-         SET[0], SET[1], SET[2], SET[3], SET[4]);
+  printf("SENDER: sending SET\n", SET[0], SET[1], SET[2], SET[3], SET[4]);
   (void)signal(SIGALRM, atende); // instala  rotina que atende interrupcao
 
   strcpy(buf, "");
@@ -175,31 +174,30 @@ int llopenReceiver(char *SerialPort) {
 
 int llwrite(int fd, unsigned char *buffer, int length) {
   unsigned char frame[255];
-    int sequenceNumber = 0;
+  int sequenceNumber = 0;
 
   frame[0] = FLAG;
   frame[1] = A;
-  //TODO: campo de control != sequenceNumber
+  // TODO: campo de control != sequenceNumber
   frame[2] = (unsigned char)sequenceNumber;
   frame[3] = 0; // bcc1
 
   int i;
   for (i = 0; i < length; i++) {
     frame[i + 4] = buffer[i];
-	//printf("%d : %02X \n", i, frame[i + 4]);
+    // printf("%d : %02X \n", i, frame[i + 4]);
   }
 
   frame[length + 4] = 0; // bcc2
   frame[length + 5] = FLAG;
 
-	for (i = 0; i < length +6; i++) {
-	printf("%d : %02X \n", i, frame[i]);
-  	}
+  for (i = 0; i < length + 6; i++) {
+    printf("%d : %02X \n", i, frame[i]);
+  }
 
-  int frameSize = stuffingFrame(frame, length +6);
+  int frameSize = stuffingFrame(frame, length + 6);
 
   write(fd, frame, frameSize);
-
 }
 
 int llread(int fd, unsigned char *buffer) {
@@ -220,27 +218,27 @@ int llread(int fd, unsigned char *buffer) {
 
   printf("\nVou começar a ler\n");
 
-  while(!over){
+  while (!over) {
 
-  readingFrame(fd, frame);
+    readingFrame(fd, frame);
 
-  destuffingFrame(frame);
+    destuffingFrame(frame);
 
-  // Processing frame
-  if(frame[FIELD_CONTROL] == NUMBER_OF_SEQUENCE_0 || frame[FIELD_CONTROL] == NUMBER_OF_SEQUENCE_1){
-    ret = processingDataFrame(frame, &file, fp);
-  }
+    // Processing frame
+    if (frame[FIELD_CONTROL] == NUMBER_OF_SEQUENCE_0 ||
+        frame[FIELD_CONTROL] == NUMBER_OF_SEQUENCE_1) {
+      ret = processingDataFrame(frame, &file, fp);
+    }
 
-  if(ret == END_CTRL_PACKET){
-    over = 1;
-  }
-
+    if (ret == END_CTRL_PACKET) {
+      over = 1;
+    }
   }
 
   printf("Terminei de ler\n");
 }
 
-int readingFrame(int fd, unsigned char* frame){
+int readingFrame(int fd, unsigned char *frame) {
   unsigned char oneByte;
   int over = 0;
   int i = 0;
@@ -250,12 +248,12 @@ int readingFrame(int fd, unsigned char* frame){
   frame[i] = oneByte;
   i++;
 
-  while(!over){
+  while (!over) {
     read(fd, &oneByte, 1);
     frame[i] = oneByte;
 
     // testing if is the last character
-    if(oneByte == FLAG){
+    if (oneByte == FLAG) {
       over = 1;
     }
     i++;
@@ -264,37 +262,37 @@ int readingFrame(int fd, unsigned char* frame){
   return i; // returning the size of the frame
 }
 
-int processingDataFrame(unsigned char *frame, FileInfo* file, int fp){
+int processingDataFrame(unsigned char *frame, FileInfo *file, int fp) {
   int frameIndex = 4; // Where the packet starts
   int i;
   int numberOfBytes;
   int ret;
 
   // Testing to see if is a control packet
-  if(frame[frameIndex] == START_CTRL_PACKET || frame[frameIndex] == END_CTRL_PACKET){
+  if (frame[frameIndex] == START_CTRL_PACKET ||
+      frame[frameIndex] == END_CTRL_PACKET) {
     ret = frame[frameIndex];
     printf("Ret : %d\n", ret);
-    frameIndex+= 2; // TODO : Estou a ignorar o T
+    frameIndex += 2; // TODO : Estou a ignorar o T
 
     numberOfBytes = frame[frameIndex];
     frameIndex++; // taking frame index to de begginning of the data
-    memcpy(&((*file).size), frame+frameIndex, numberOfBytes);
+    memcpy(&((*file).size), frame + frameIndex, numberOfBytes);
 
     frameIndex += numberOfBytes + 1; // TODO : Estou a ignorar o T
 
     numberOfBytes = frame[frameIndex];
     frameIndex++;
-    memcpy(&((*file).filename), frame+frameIndex, numberOfBytes);
+    memcpy(&((*file).filename), frame + frameIndex, numberOfBytes);
 
     frameIndex += numberOfBytes;
 
     // TODO : processar o bcc2
 
-    //FIXME: remove printf
+    // FIXME: remove printf
     printf("Tamanho : %d\n", file->size);
     printf("Nome : %s\n", file->filename);
-  }
-  else if(frame[frameIndex] == DATA_CTRL_PACKET){
+  } else if (frame[frameIndex] == DATA_CTRL_PACKET) {
     ret = frame[frameIndex];
     frameIndex += 2; // TODO : Estou a ignorar o número de sequênon-canonical
 
@@ -302,35 +300,35 @@ int processingDataFrame(unsigned char *frame, FileInfo* file, int fp){
     frameIndex++;
     int l1 = frame[frameIndex];
     frameIndex++;
-  //  printf("l1 : %d\n" , l1);
-//    printf("l2 : %d\n" , l2);
+    //  printf("l1 : %d\n" , l1);
+    //    printf("l2 : %d\n" , l2);
     int k = 256 * (int)l2 + (int)l1;
-    printf("k : %d\n" , k);
+    printf("k : %d\n", k);
     printf("fp : %d\n", fp);
     unsigned char data[MAX_SIZE];
 
-    for(i = 0;i < k; i++){
-        //printf("%d : %X\n", i, frame[frameIndex+i]);
-        write(fp, frame[frameIndex+i], 1);
+    for (i = 0; i < k; i++) {
+      // printf("%d : %X\n", i, frame[frameIndex+i]);
+      write(fp, &frame[frameIndex + i], 1);
     }
   }
 
   return ret;
 }
 
-int stuffingFrame(unsigned char *frame, int frameSize){
+int stuffingFrame(unsigned char *frame, int frameSize) {
   int i;
   int j;
 
-  for(i = 1; i < frameSize-1; i++){
-    if(frame[i] == FLAG){
+  for (i = 1; i < frameSize - 1; i++) {
+    if (frame[i] == FLAG) {
       frame[i] = ESC;
       i++;
       shiftFrame(frame, i, frameSize, 0);
       frameSize++;
       frame[i] = FLAG_HIDE_BYTE;
     }
-    if(frame[i] == ESC){
+    if (frame[i] == ESC) {
       i++;
       shiftFrame(frame, i, frameSize, 0);
       frameSize++;
@@ -341,41 +339,38 @@ int stuffingFrame(unsigned char *frame, int frameSize){
   return frameSize;
 }
 
-int shiftFrame(unsigned char *frame, int i, int frameSize, int shiftDirection){
+int shiftFrame(unsigned char *frame, int i, int frameSize, int shiftDirection) {
   unsigned char temp;
-  if(shiftDirection == 0){
+  if (shiftDirection == 0) {
 
     frameSize--;
-    for(;frameSize >= i; frameSize--){
-      frame[frameSize+1] = frame[frameSize];
+    for (; frameSize >= i; frameSize--) {
+      frame[frameSize + 1] = frame[frameSize];
     }
-  }
-  else if(shiftDirection == 1){
+  } else if (shiftDirection == 1) {
     int over = 0;
     i++;
     do {
-      frame[i] = frame[i+1];
+      frame[i] = frame[i + 1];
       i++;
-      if(frame[i]==FLAG){
-        over=1;
+      if (frame[i] == FLAG) {
+        over = 1;
       }
-    } while(!over);
+    } while (!over);
   }
 }
 
-int destuffingFrame(unsigned char *frame){
+int destuffingFrame(unsigned char *frame) {
   int over = 0;
 
   int i = 1;
-  while(!over){
-    if(frame[i] == FLAG){
+  while (!over) {
+    if (frame[i] == FLAG) {
       over = 1;
-    }
-    else if(frame[i] == ESC && frame[i+1] == FLAG_HIDE_BYTE){
+    } else if (frame[i] == ESC && frame[i + 1] == FLAG_HIDE_BYTE) {
       frame[i] = FLAG;
       shiftFrame(frame, i, 0, 1);
-    }
-    else if(frame[i] == ESC && frame[i+1] == ESC_HIDE_BYTE){
+    } else if (frame[i] == ESC && frame[i + 1] == ESC_HIDE_BYTE) {
       shiftFrame(frame, i, 0, 1);
     }
     i++;

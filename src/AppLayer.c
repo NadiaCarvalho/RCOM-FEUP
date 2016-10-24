@@ -63,17 +63,15 @@ int sendData() {
   unsigned char dataPacket[dataPacketSize];
   int ret;
 
-  while(ret != 0){
+  while (ret != 0) {
     ret = sendDataPackage(dataPacket, fp, 0);
     llwrite(fd, dataPacket, dataPacketSize);
     // TODO : Implementar o controlo de fluxo
   }
 
-  controlPacketSize =
-      sendControlPackage(END_CTRL_PACKET, file, controlPacket);
+  controlPacketSize = sendControlPackage(END_CTRL_PACKET, file, controlPacket);
 
   llwrite(fd, controlPacket, controlPacketSize);
-
 }
 int receiveData() {
 
@@ -122,29 +120,27 @@ int sendDataPackage(unsigned char *dataPacket, FILE *fp, int sequenceNumber) {
   unsigned char buffer[DATA_SIZE];
   int ret;
   ret = fread(buffer, sizeof(char), DATA_SIZE, fp);
-  if(ret == 0){
+  if (ret == 0) {
     return 0;
-  }
-  else if( ret < 0){
+  } else if (ret < 0) {
     return -1;
   }
 
-//K=256 * L1 + L2
+  // K=256 * L1 + L2
 
-  dataPacket[0]=DATA_CTRL_PACKET;
-  dataPacket[1]=sequenceNumber;
-  //L1
-  dataPacket[2]=0;
-  //L2
-  dataPacket[3]=ret;
+  dataPacket[0] = DATA_CTRL_PACKET;
+  dataPacket[1] = sequenceNumber;
+  // L1
+  dataPacket[2] = 0;
+  // L2
+  dataPacket[3] = ret;
 
   int j;
-  for(j=0; j<DATA_SIZE;j++){
-    dataPacket[4+j]=buffer[j];
+  for (j = 0; j < DATA_SIZE; j++) {
+    dataPacket[4 + j] = buffer[j];
   }
 
   return 1;
-
 }
 
 int llopen(char *SerialPort, enum Functionality func) {

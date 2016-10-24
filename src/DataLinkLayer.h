@@ -28,7 +28,14 @@ struct termios oldtio, newtio;
 int fd, c, res;
 
 // WARNING: use diferente name for the state from global variables...
-typedef enum { START, FLAG_STATE, A_STATE, C_STATE, BCC, SUCCESS } ReadingArrayState;
+typedef enum {
+  START,
+  FLAG_STATE,
+  A_STATE,
+  C_STATE,
+  BCC,
+  SUCCESS
+} ReadingArrayState;
 
 // SET = F-A-C-BCC-F
 static char SET[5] = {FLAG, A, C_SET, A ^ C_SET, FLAG};
@@ -49,13 +56,13 @@ int llopenTransmiter(char *SerialPort);
 
 int llopenReceiver(char *SerialPort);
 
-int llwrite(int fd, unsigned char * buffer, int length);
+int llwrite(int fd, unsigned char *buffer, int length);
 
 int llread(int fd, unsigned char *buffer);
 
-int readingFrame(int fd, unsigned char* frame);
+int readingFrame(int fd, unsigned char *frame);
 
-int processingDataFrame(unsigned char *frame, FileInfo* file, int fp);
+int processingDataFrame(unsigned char *frame, FileInfo *file, int fp);
 
 int stuffingFrame(unsigned char *frame, int frameSize);
 
