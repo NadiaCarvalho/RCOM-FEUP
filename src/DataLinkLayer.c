@@ -207,21 +207,26 @@ int llread(int fd, unsigned char *buffer) {
   unsigned char frame[255];
   int over = 0;
   FileInfo file;
+  int frameSize;
+  int ret;
   printf("\nVou começar a ler\n");
 
-  int frameSize = readingFrame(fd, frame);
+  while(!over){
+
+  readingFrame(fd, frame);
 
   destuffingFrame(frame);
 
   // Processing frame
   if(frame[FIELD_CONTROL] == NUMBER_OF_SEQUENCE_0 || frame[FIELD_CONTROL] == NUMBER_OF_SEQUENCE_1){
-    processingDataFrame(frame, &file);
+    ret = processingDataFrame(frame, &file);
   }
 
+  if(ret == END_CTRL_PACKET){
+    over = 1;
+  }
 
-  //FIXME: remove printf
-  printf("Tamanho : %d\n", file.size);
-  printf("Nome : %s\n", file.filename);
+  }
 
   printf("Terminei de ler\n");
 }
@@ -254,9 +259,11 @@ int processingDataFrame(unsigned char *frame, FileInfo* file){
   int frameIndex = 4; // Where the packet starts
   int i;
   int numberOfBytes;
+  int ret;
 
   // Testing to see if is a control packet
   if(frame[frameIndex] == START_CTRL_PACKET || frame[frameIndex] == END_CTRL_PACKET){
+    ret = frame[frameIndex];
     frameIndex+= 2; // TODO : Estou a ignorar o T
 
     numberOfBytes = frame[frameIndex];
@@ -272,7 +279,31 @@ int processingDataFrame(unsigned char *frame, FileInfo* file){
     frameIndex += numberOfBytes;
 
     // TODO : processar o bcc2
+
+    //FIXME: remove printf
+    printf("Tamanho : %d\n", file->size);
+    printf("Nome : %s\n", file->filename);
   }
+  else if(frame[frameIndex] == DATA_CTRL_PACKET){
+    ret = frame[frameIndex];
+    frameIndex += 2; // TODO : Estou a ignorar o número de sequênon-canonical
+
+    int l2 = frame[frameIndex];
+    frameIndex++;
+    int l1 = frame[frameIndex];
+    frameIndex++;
+    printf("l1 : %d\n" , l1);
+    printf("l2 : %d\n" , l2);
+    int k = 256 * (int)l2 + (int)l1;
+    printf("k : %d\n" , k);
+    unsigned char data[MAX_SIZE];
+
+    for(i = 0;i < k; i++){
+        printf("%d : %X\n", i, frame[frameIndex+i]);
+    }
+  }
+
+  return ret;
 }
 
 int stuffingFrame(unsigned char *frame, int frameSize){

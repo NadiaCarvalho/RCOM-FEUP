@@ -117,7 +117,7 @@ int sendDataPackage(unsigned char *dataPacket, FILE *fp, int sequenceNumber) {
 
 //K=256 * L1 + L2
 
-  dataPacket[0]=DATA_PACKET;
+  dataPacket[0]=DATA_CTRL_PACKET;
   dataPacket[1]=sequenceNumber;
   //L1
   dataPacket[2]=0;

@@ -1,7 +1,7 @@
 #ifndef APPLAYER_H
 #define APPLAYER_H
 
-#define DATA_PACKET 1 
+#define DATA_CTRL_PACKET 1 
 #define START_CTRL_PACKET 2
 #define END_CTRL_PACKET 3
 #define DATA_SIZE 100
