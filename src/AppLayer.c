@@ -40,6 +40,7 @@ int sendData() {
   fp = fopen(file.filename, "rb");
   if (fp == NULL) {
     printf("Could not open file  test.c");
+    return;
   }
   printf("opened file %s\n", file.filename);
 

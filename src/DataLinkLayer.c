@@ -204,10 +204,7 @@ int llwrite(int fd, unsigned char *buffer, int length) {
 int llread(int fd, unsigned char *buffer) {
 
   unsigned char frame[255];
-  unsigned char filename[255];
-  int fileS;
   int over = 0;
-  unsigned char fileName[255];
   FileInfo file;
   printf("\nVou começar a ler\n");
 
@@ -219,6 +216,10 @@ int llread(int fd, unsigned char *buffer) {
   if(frame[FIELD_CONTROL] == NUMBER_OF_SEQUENCE_0 || frame[FIELD_CONTROL] == NUMBER_OF_SEQUENCE_1){
     processingDataFrame(frame, &file);
   }
+
+  //FIXME: remove printf
+  printf("Tamanho : %d\n", file.size);
+  printf("Nome : %s\n", file.filename);
 
   printf("Terminei de ler\n");
 }
@@ -253,7 +254,7 @@ int processingDataFrame(unsigned char *frame, FileInfo* file){
   int numberOfBytes;
 
   // Testing to see if is a control packet
-  if(frame[frameIndex] == 2 || frame[frameIndex] == 3){
+  if(frame[frameIndex] == START_CTRL_PACKET || frame[frameIndex] == END_CTRL_PACKET){
     frameIndex+= 2; // TODO : Estou a ignorar o T
 
     numberOfBytes = frame[frameIndex];
