@@ -40,7 +40,7 @@ int sendData() {
   fp = fopen(file.filename, "rb");
   if (fp == NULL) {
     printf("Could not open file  test.c");
-    return;
+    return -1;
   }
   printf("opened file %s\n", file.filename);
 
@@ -57,6 +57,13 @@ int sendData() {
   int controlPacketSize = sendControlPackage(START_CTRL_PACKET, file, controlPacket);
 
   llwrite(fd, controlPacket, controlPacketSize);
+
+  int dataPacketSize = DATA_SIZE + 4;
+  unsigned char dataPacket[dataPacketSize];
+
+  int ret = sendDataPackage(dataPacket, &fp);
+
+
 }
 int receiveData() {
 
@@ -101,6 +108,14 @@ int sendControlPackage(int state, FileInfo file, unsigned char *controlPacket) {
 
   return controlPacketSize;
 }
+
+int sendDataPackage(unsigned char *dataPacket, FILE* fp){
+  unsigned char buffer[DATA_SIZE];
+
+  read(fp,buffer,DATA_SIZE);
+  printf("DATA: %s\n",buffer );
+}
+
 int llopen(char *SerialPort, enum Functionality func) {
 
   switch (func) {
