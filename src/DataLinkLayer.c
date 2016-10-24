@@ -209,6 +209,15 @@ int llread(int fd, unsigned char *buffer) {
   FileInfo file;
   int frameSize;
   int ret;
+  int fp;
+  fp = open("teste.gif", O_CREAT | O_WRONLY);
+  if (fp == -1) {
+    printf("Could not open file  test.c");
+    return -1;
+  }
+  fchmod(fp, 777);
+  printf("opened file teste.gif\n pointer : %d\n", fp);
+
   printf("\nVou começar a ler\n");
 
   while(!over){
@@ -219,7 +228,7 @@ int llread(int fd, unsigned char *buffer) {
 
   // Processing frame
   if(frame[FIELD_CONTROL] == NUMBER_OF_SEQUENCE_0 || frame[FIELD_CONTROL] == NUMBER_OF_SEQUENCE_1){
-    ret = processingDataFrame(frame, &file);
+    ret = processingDataFrame(frame, &file, fp);
   }
 
   if(ret == END_CTRL_PACKET){
@@ -255,7 +264,7 @@ int readingFrame(int fd, unsigned char* frame){
   return i; // returning the size of the frame
 }
 
-int processingDataFrame(unsigned char *frame, FileInfo* file){
+int processingDataFrame(unsigned char *frame, FileInfo* file, int fp){
   int frameIndex = 4; // Where the packet starts
   int i;
   int numberOfBytes;
@@ -296,12 +305,14 @@ int processingDataFrame(unsigned char *frame, FileInfo* file){
   //  printf("l1 : %d\n" , l1);
 //    printf("l2 : %d\n" , l2);
     int k = 256 * (int)l2 + (int)l1;
-//    printf("k : %d\n" , k);
+    printf("k : %d\n" , k);
+    printf("fp : %d\n", fp);
     unsigned char data[MAX_SIZE];
 
-  /*  for(i = 0;i < k; i++){
-        printf("%d : %X\n", i, frame[frameIndex+i]);
-    }*/
+    for(i = 0;i < k; i++){
+        //printf("%d : %X\n", i, frame[frameIndex+i]);
+        write(fp, frame[frameIndex+i], 1);
+    }
   }
 
   return ret;

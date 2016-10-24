@@ -55,7 +55,7 @@ int llread(int fd, unsigned char *buffer);
 
 int readingFrame(int fd, unsigned char* frame);
 
-int processingDataFrame(unsigned char *frame, FileInfo* file);
+int processingDataFrame(unsigned char *frame, FileInfo* file, int fp);
 
 int stuffingFrame(unsigned char *frame, int frameSize);
 
