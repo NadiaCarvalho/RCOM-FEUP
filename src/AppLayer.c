@@ -49,19 +49,22 @@ int sendData() {
   printf("%d\n", file.size);
 
   unsigned char fileSize[50];
-  memcpy(fileSize,&file.size, sizeof(file.size));
+  memcpy(fileSize, &file.size, sizeof(file.size));
 
   int packetSize = 5 + strlen(file.filename) + strlen(fileSize);
 
   unsigned char controlPacket[packetSize];
-  int controlPacketSize = sendControlPackage(START_CTRL_PACKET, file, controlPacket);
+  int controlPacketSize =
+      sendControlPackage(START_CTRL_PACKET, file, controlPacket);
 
   llwrite(fd, controlPacket, controlPacketSize);
 
   int dataPacketSize = DATA_SIZE + 4;
   unsigned char dataPacket[dataPacketSize];
 
-  int ret = sendDataPackage(dataPacket, &fp);
+
+  int ret = sendDataPackage(dataPacket, fp, 0);
+  llwrite(fd, dataPacket, dataPacketSize);
 
 
 }
@@ -69,17 +72,17 @@ int receiveData() {
 
   char fileName[255];
 
-  //read(fd, fileName, 255);
+  // read(fd, fileName, 255);
   unsigned char buffer[255];
   llread(fd, buffer);
 }
 
 int sendControlPackage(int state, FileInfo file, unsigned char *controlPacket) {
 
-  //TODO: refracting repeated code
+  // TODO: refracting repeated code
   unsigned char fileSize[50];
 
-	memcpy(fileSize,&file.size, sizeof(file.size));
+  memcpy(fileSize, &file.size, sizeof(file.size));
 
   int controlPacketSize = 0;
 
@@ -94,26 +97,40 @@ int sendControlPackage(int state, FileInfo file, unsigned char *controlPacket) {
   }
   controlPacketSize += strlen(fileSize);
 
-  controlPacket[controlPacketSize] =
-      (unsigned char)1; // 0-tamanho do ficheiro
-	controlPacketSize++;
+  controlPacket[controlPacketSize] = (unsigned char)1; // 0-tamanho do ficheiro
+  controlPacketSize++;
   controlPacket[controlPacketSize] = (unsigned char)strlen(file.filename);
-	controlPacketSize++;
+  controlPacketSize++;
 
   for (i = 0; i < strlen(file.filename); i++) {
     controlPacket[controlPacketSize + i] = file.filename[i];
   }
   controlPacketSize += strlen(file.filename);
 
-
   return controlPacketSize;
 }
 
-int sendDataPackage(unsigned char *dataPacket, FILE* fp){
-  unsigned char buffer[DATA_SIZE];
+int sendDataPackage(unsigned char *dataPacket, FILE *fp, int sequenceNumber) {
 
-  read(fp,buffer,DATA_SIZE);
-  printf("DATA: %s\n",buffer );
+  unsigned char buffer[DATA_SIZE];
+  fread(buffer, sizeof(char), DATA_SIZE, fp);
+
+//K=256 * L1 + L2
+
+  dataPacket[0]=DATA_PACKET;
+  dataPacket[1]=sequenceNumber;
+  //L1
+  dataPacket[2]=0;
+  //L2
+  dataPacket[3]=100;
+
+  int j;
+  for(j=0; j<DATA_SIZE;j++){
+    dataPacket[4+j]=buffer[j];
+  }
+
+  return 1;
+
 }
 
 int llopen(char *SerialPort, enum Functionality func) {

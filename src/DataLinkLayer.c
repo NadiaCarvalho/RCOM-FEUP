@@ -175,10 +175,11 @@ int llopenReceiver(char *SerialPort) {
 
 int llwrite(int fd, unsigned char *buffer, int length) {
   unsigned char frame[255];
-  int sequenceNumber = 0;
+    int sequenceNumber = 0;
 
   frame[0] = FLAG;
   frame[1] = A;
+  //TODO: campo de control != sequenceNumber
   frame[2] = (unsigned char)sequenceNumber;
   frame[3] = 0; // bcc1
 
