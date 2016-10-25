@@ -59,13 +59,15 @@ int sendData() {
 
   llwrite(fd, controlPacket, controlPacketSize);
 
-  int dataPacketSize = DATA_SIZE + 4;
-  unsigned char dataPacket[dataPacketSize];
+  int dataPacketSize;
+  unsigned char dataPacket[DATA_SIZE + 4];
   int ret;
 
   while (ret != 0) {
-    ret = sendDataPackage(dataPacket, fp, 0);
-    llwrite(fd, dataPacket, dataPacketSize);
+    ret = sendDataPackage(dataPacket, fp, 0, &dataPacketSize);
+    if(ret != 0){
+      llwrite(fd, dataPacket, dataPacketSize);
+    }
     // TODO : Implementar o controlo de fluxo
   }
 
@@ -73,6 +75,7 @@ int sendData() {
 
   llwrite(fd, controlPacket, controlPacketSize);
 }
+
 int receiveData() {
 
   char fileName[255];
@@ -115,7 +118,7 @@ int sendControlPackage(int state, FileInfo file, unsigned char *controlPacket) {
   return controlPacketSize;
 }
 
-int sendDataPackage(unsigned char *dataPacket, FILE *fp, int sequenceNumber) {
+int sendDataPackage(unsigned char *dataPacket, FILE *fp, int sequenceNumber, int *length) {
 
   unsigned char buffer[DATA_SIZE];
   int ret;
@@ -125,6 +128,8 @@ int sendDataPackage(unsigned char *dataPacket, FILE *fp, int sequenceNumber) {
   } else if (ret < 0) {
     return -1;
   }
+
+  *length = ret + 4; // size of the data and the 4 initial bytes
 
   // K=256 * L1 + L2
 
