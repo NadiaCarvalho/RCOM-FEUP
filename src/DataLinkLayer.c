@@ -197,7 +197,7 @@ int llwrite(int fd, unsigned char *buffer, int length) {
     printf("%d : %02X \n", i, frame[i]);
   }
 
-  if(frameSize!=(length+6)){
+/*  if(frameSize!=(length+6)){
   //  if(frameSize<255)
       printf("ENTREI\n");
       frame[7]=frameSize-10;
@@ -205,8 +205,8 @@ int llwrite(int fd, unsigned char *buffer, int length) {
       //TODO: verify this
         frame[6]=frame[6]+1;
         frame[7]=frameSize-length+6;
-      }*/
-    }
+      }
+    }*/
 
   write(fd, frame, frameSize);
 }
@@ -453,9 +453,25 @@ int processingDataFrame(unsigned char *frame, FileInfo *file, int fp) {
 int stuffingFrame(unsigned char *frame, int frameSize) {
   int i;
   int j;
+  int typeOfFrame;
+
+  // veryfing type of frame
+  if(frame[4] == DATA_CTRL_PACKET){
+    typeOfFrame = 0; // data packet
+  }
+  else typeOfFrame = 1; // control packet
 
   for (i = 1; i < frameSize - 1; i++) {
     if (frame[i] == FLAG) {
+      if(typeOfFrame == 0){
+        frame[7]++;
+      }
+      else if(typeOfFrame == 1){
+        if(i > ( frame[6] + 7)){
+          frame[frame[6]+7]++;
+        }
+        else frame[6]++;
+      }
       frame[i] = ESC;
       i++;
       shiftFrame(frame, i, frameSize, 0);
@@ -463,6 +479,15 @@ int stuffingFrame(unsigned char *frame, int frameSize) {
       frame[i] = FLAG_HIDE_BYTE;
     }
     if (frame[i] == ESC) {
+      if(typeOfFrame == 0){
+        frame[7]++;
+      }
+      else if(typeOfFrame == 1){
+        if(i > ( frame[6] + 7)){
+          frame[frame[6]+7]++;
+        }
+        else frame[6]++;
+      }
       i++;
       shiftFrame(frame, i, frameSize, 0);
       frameSize++;
@@ -496,15 +521,42 @@ int shiftFrame(unsigned char *frame, int i, int frameSize, int shiftDirection) {
 
 int destuffingFrame(unsigned char *frame) {
   int over = 0;
+  int typeOfFrame;
+
+  // veryfing type of frame
+  if(frame[4] == DATA_CTRL_PACKET){
+    typeOfFrame = 0; // data packet
+  }
+  else typeOfFrame = 1; // control packet
 
   int i = 1;
   while (!over) {
     if (frame[i] == FLAG) {
       over = 1;
-    } else if (frame[i] == ESC && frame[i + 1] == FLAG_HIDE_BYTE) {
+    }
+    else if (frame[i] == ESC && frame[i + 1] == FLAG_HIDE_BYTE) {
+      if(typeOfFrame == 0){
+        frame[7]--;
+      }
+      else if(typeOfFrame == 1){
+        if(i > ( frame[6] + 7)){
+          frame[frame[6]+7]--;
+        }
+        else frame[6]--;
+      }
       frame[i] = FLAG;
       shiftFrame(frame, i, 0, 1);
-    } else if (frame[i] == ESC && frame[i + 1] == ESC_HIDE_BYTE) {
+    }
+    else if (frame[i] == ESC && frame[i + 1] == ESC_HIDE_BYTE) {
+      if(typeOfFrame == 0){
+        frame[7]--;
+      }
+      else if(typeOfFrame == 1){
+        if(i > ( frame[6] + 7)){
+          frame[frame[6]+7]--;
+        }
+        else frame[6]--;
+      }
       shiftFrame(frame, i, 0, 1);
     }
     i++;
