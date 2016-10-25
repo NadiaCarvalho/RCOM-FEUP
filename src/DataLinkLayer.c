@@ -5,11 +5,13 @@
 #include <signal.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <termios.h>
+#include <string.h>
 #include <unistd.h>
+#include "AppLayer.h"
 #include "DataLinkLayer.h"
 
 int flag = 1, tries = 0, success = 0, fail = 0;
+
 
 void atende() {
   tries++;
@@ -68,12 +70,12 @@ int openSerialPort(char *SerialPort) {
 
 int closeSerialPort(char *SerialPort) {
   // set old settings
-  if (tcsetattr(SerialPort, TCSANOW, &oldtio) < 0) {
+  if (tcsetattr((int)SerialPort, TCSANOW, &oldtio) < 0) {
     printf("ERROR in closeSerialPort(): could not set old termios\n");
     return -1;
   }
 
-  close(SerialPort);
+  close((int)SerialPort);
 
   return 0;
 }
@@ -117,7 +119,7 @@ int setTermiosStructure() {
 
 int readingArray(int fd, char compareTo[], int answer) {
   ReadingArrayState state = START;
-  int returnValue;
+  int returnValue=-1;
   char buf[255];
 
   int i = 0;
@@ -155,7 +157,7 @@ int llopenTransmiter(char *SerialPort) {
 
   // send SET
   res = write(fd, SET, 5);
-  printf("SENDER: sending SET\n", SET[0], SET[1], SET[2], SET[3], SET[4]);
+  printf("SENDER: sending SET\n");
   (void)signal(SIGALRM, atende); // instala  rotina que atende interrupcao
 
   strcpy(buf, "");
@@ -279,7 +281,7 @@ int processingDataFrame(unsigned char *frame, FileInfo *file, int fp) {
   int frameIndex = 4; // Where the packet starts
   int i;
   int numberOfBytes;
-  int ret;
+  int ret=-1;
 
   // Testing to see if is a control packet
   if (frame[frameIndex] == START_CTRL_PACKET ||

@@ -7,10 +7,17 @@
 #include <sys/types.h>
 #include <termios.h>
 #include <unistd.h>
-#include <stdlib.h>
 #include "DataLinkLayer.h"
 #include "AppLayer.h"
 #include "Utilities.h"
+
+int dataPacketSize;
+unsigned char dataPacket[DATA_SIZE + 4];
+
+void retry(){
+  alarm(3);
+  llwrite(fd, dataPacket, dataPacketSize);
+}
 
 int appLayer(char *SerialPort, enum Functionality func) {
 
@@ -37,15 +44,18 @@ int appLayer(char *SerialPort, enum Functionality func) {
 int sendData() {
 
   int seqNumber = 0;
+  int ret=0;
   FileInfo file;
-  getFile(file.filename);
+  getFile((char*)file.filename);
   FILE *fp;
-  fp = fopen(file.filename, "rb");
+  fp = fopen((char*)file.filename, "rb");
   if (fp == NULL) {
     printf("Could not open file  test.c");
     return -1;
   }
   printf("opened file %s\n", file.filename);
+
+  (void)signal(SIGALRM, retry); // instala  rotina que atende interrupcao
 
   // Determine file size
   file.size = fileSize(fp);
@@ -54,7 +64,7 @@ int sendData() {
   unsigned char fileSize[50];
   memcpy(fileSize, &file.size, sizeof(file.size));
 
-  int packetSize = 5 + strlen(file.filename) + strlen(fileSize);
+  int packetSize = 5 + strlen((char*)file.filename) + strlen((char*)fileSize);
 
   unsigned char controlPacket[packetSize];
   int controlPacketSize =
@@ -62,18 +72,14 @@ int sendData() {
 
   llwrite(fd, controlPacket, controlPacketSize);
 
-  int dataPacketSize;
-  unsigned char dataPacket[DATA_SIZE + 4];
-  int ret;
-
   while (ret != 0) {
     ret = sendDataPackage(dataPacket, fp, 0, &dataPacketSize);
     if (ret != 0) {
-      //alarm(3);
+      alarm(3);
       llwrite(fd, dataPacket, dataPacketSize);
     }
     seqNumber=checkAnswer(fd, seqNumber, dataPacket, dataPacketSize);
-    //alarm(0);
+    alarm(0);
   }
 
   controlPacketSize = sendControlPackage(END_CTRL_PACKET, file, controlPacket);
@@ -108,7 +114,7 @@ int receiveAnswer(int fd, int seqNumber) {
   }
   else if (readingArray(fd, RR1, seqNumber) == RETURN_REJ)
     return RETURN_REJ;
-  
+
 
   return -1;
 
@@ -133,24 +139,24 @@ int sendControlPackage(int state, FileInfo file, unsigned char *controlPacket) {
 
   controlPacket[0] = (unsigned char)state;
   controlPacket[1] = (unsigned char)0; // 0-tamanho do ficheiro
-  controlPacket[2] = (unsigned char)strlen(fileSize);
+  controlPacket[2] = (unsigned char)strlen((char*)fileSize);
   controlPacketSize = 3;
   // um char é sempre um byte?
-  int i;
-  for (i = 0; i < strlen(fileSize); i++) {
+  unsigned int i;
+  for (i = 0; i < strlen((char*)fileSize); i++) {
     controlPacket[i + 3] = fileSize[i];
   }
-  controlPacketSize += strlen(fileSize);
+  controlPacketSize += strlen((char*)fileSize);
 
   controlPacket[controlPacketSize] = (unsigned char)1; // 0-tamanho do ficheiro
   controlPacketSize++;
-  controlPacket[controlPacketSize] = (unsigned char)strlen(file.filename);
+  controlPacket[controlPacketSize] = (unsigned char)strlen((char*)file.filename);
   controlPacketSize++;
 
-  for (i = 0; i < strlen(file.filename); i++) {
+  for (i = 0; i < strlen((char*)file.filename); i++) {
     controlPacket[controlPacketSize + i] = file.filename[i];
   }
-  controlPacketSize += strlen(file.filename);
+  controlPacketSize += strlen((char*)file.filename);
 
   return controlPacketSize;
 }
@@ -196,4 +202,5 @@ int llopen(char *SerialPort, enum Functionality func) {
     llopenReceiver(SerialPort);
     break;
   }
+  return 1;
 }

@@ -1,11 +1,14 @@
-#ifndef APPLAYER_H
-#define APPLAYER_H
+#ifndef APPLAYER_FINAL
+#define APPLAYER_FINAL
 
 #define DATA_CTRL_PACKET 1
 #define START_CTRL_PACKET 2
 #define END_CTRL_PACKET 3
 #define DATA_SIZE 100
 #define MAX_SIZE 255
+
+#include <stdio.h>
+#include <stdlib.h>
 
 enum Functionality { TRANSMITER, RECEIVER };
 

@@ -1,9 +1,8 @@
-#ifndef DATALINKLAYER_H
-#define DATALINKLAYER_H
+#ifndef DATALINKLAYER_FILE
+#define DATALINKLAYER_FILE
 
 #include <stdio.h>
 #include <termios.h>
-#include <string.h>
 #include "AppLayer.h"
 
 #define BAUDRATE B38400

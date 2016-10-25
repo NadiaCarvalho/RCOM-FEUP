@@ -1,9 +1,8 @@
-#ifndef UTILITIES_H
-#define UTILITIES_H
+#ifndef UTILITIES_FILE
+#define UTILITIES_FILE
 #include <fcntl.h>
 #include <signal.h>
 #include <stdio.h>
-#include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <termios.h>
