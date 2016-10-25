@@ -19,4 +19,17 @@ int appLayer(char *SerialPort, enum Functionality functionality);
 int llopen(char *SerialPort, enum Functionality functionality);
 
 int sendControlPackage(int state, FileInfo file, unsigned char *controlPacket);
+
+int sendData();
+
+int checkAnswer(int fd, int seqNumber, unsigned char dataPacket[DATA_SIZE +4], int dataPacketSize);
+
+int receiveAnswer(int fd, int seqNumber);
+
+int receiveData();
+
+int sendControlPackage(int state, FileInfo file, unsigned char *controlPacket);
+
+int sendDataPackage(unsigned char *dataPacket, FILE *fp, int sequenceNumber,int *length);
+
 #endif

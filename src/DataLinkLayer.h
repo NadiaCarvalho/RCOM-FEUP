@@ -1,9 +1,10 @@
 #ifndef DATALINKLAYER_H
 #define DATALINKLAYER_H
 
-#include "AppLayer.h"
 #include <stdio.h>
 #include <termios.h>
+#include <string.h>
+#include "AppLayer.h"
 
 #define BAUDRATE B38400
 #define MODEMDEVICE "/dev/ttyS1"
@@ -55,7 +56,7 @@ static char REJ0[5] = {FLAG, A, C_REJ0, A ^ C_SET, FLAG};
 
 static char REJ1[5] = {FLAG, A, C_REJ1, A ^ C_UA, FLAG};
 
-void atender();
+void atende();
 
 int writenoncanonical(char *SerialPort);
 
@@ -82,5 +83,9 @@ int stuffingFrame(unsigned char *frame, int frameSize);
 int shiftFrame(unsigned char *frame, int i, int frameSize, int shiftDirection);
 
 int destuffingFrame(unsigned char *frame);
+
+ReadingArrayState nextState(ReadingArrayState state);
+
+int readingArray(int fd, char compareTo[], int answer);
 
 #endif

@@ -1,6 +1,4 @@
-#include "AppLayer.h"
-#include "DataLinkLayer.h"
-#include "Utilities.h"
+#include <stdlib.h>
 #include <fcntl.h>
 #include <signal.h>
 #include <stdio.h>
@@ -9,6 +7,10 @@
 #include <sys/types.h>
 #include <termios.h>
 #include <unistd.h>
+#include <stdlib.h>
+#include "DataLinkLayer.h"
+#include "AppLayer.h"
+#include "Utilities.h"
 
 int appLayer(char *SerialPort, enum Functionality func) {
 
@@ -35,7 +37,6 @@ int appLayer(char *SerialPort, enum Functionality func) {
 int sendData() {
 
   int seqNumber = 0;
-  int seqAnswer;
   FileInfo file;
   getFile(file.filename);
   FILE *fp;
@@ -78,6 +79,8 @@ int sendData() {
   controlPacketSize = sendControlPackage(END_CTRL_PACKET, file, controlPacket);
 
   llwrite(fd, controlPacket, controlPacketSize);
+
+  return 1;
 }
 
 int checkAnswer(int fd, int seqNumber, unsigned char dataPacket[DATA_SIZE +4], int dataPacketSize){
@@ -90,28 +93,33 @@ int checkAnswer(int fd, int seqNumber, unsigned char dataPacket[DATA_SIZE +4], i
       llwrite(fd, dataPacket, dataPacketSize);
       checkAnswer(fd, seqNumber, dataPacket, dataPacketSize);
   }
+
+  return 1;
 }
 
 int receiveAnswer(int fd, int seqNumber) {
-  int over = 0;
-  unsigned char supervisionFrame[5];
   if (seqNumber == 0) {
     if (readingArray(fd, RR1, seqNumber) == 1)
       return 1;
-  } else if (seqNumber == 1) {
+  }
+  else if (seqNumber == 1) {
     if (readingArray(fd, RR0, seqNumber) == 1)
       return 0;
-  } else if (readingArray(fd, RR1, seqNumber) == RETURN_REJ)
+  }
+  else if (readingArray(fd, RR1, seqNumber) == RETURN_REJ)
     return RETURN_REJ;
+  
+
+  return -1;
+
 }
 
 int receiveData() {
-
-  char fileName[255];
-
   // read(fd, fileName, 255);
   unsigned char buffer[255];
   llread(fd, buffer);
+
+  return 1;
 }
 
 int sendControlPackage(int state, FileInfo file, unsigned char *controlPacket) {

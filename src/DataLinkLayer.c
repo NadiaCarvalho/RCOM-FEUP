@@ -1,13 +1,13 @@
 /*Non-Canonical Input Processing*/
-
-#include "DataLinkLayer.h"
+#include <stdio.h>
+#include <stdlib.h>
 #include <fcntl.h>
 #include <signal.h>
-#include <stdio.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <termios.h>
 #include <unistd.h>
+#include "DataLinkLayer.h"
 
 int flag = 1, tries = 0, success = 0, fail = 0;
 
@@ -43,6 +43,8 @@ ReadingArrayState nextState(ReadingArrayState state) {
     break;
   case BCC:
     state = SUCCESS;
+    break;
+  default:
     break;
   }
 
@@ -115,7 +117,6 @@ int setTermiosStructure() {
 
 int readingArray(int fd, char compareTo[], int answer) {
   ReadingArrayState state = START;
-  int res;
   int returnValue;
   char buf[255];
 
@@ -146,11 +147,11 @@ int readingArray(int fd, char compareTo[], int answer) {
         state = START;
     }
   }
+  return 1;
 }
 
 int llopenTransmiter(char *SerialPort) {
   char buf[255];
-  int i, sum = 0, speed = 0;
 
   // send SET
   res = write(fd, SET, 5);
@@ -160,7 +161,7 @@ int llopenTransmiter(char *SerialPort) {
   strcpy(buf, "");
 
   alarm(3);
-  if (readingArray(fd, UA, NULL)) {
+  if (readingArray(fd, UA, 0)) {
     alarm(0);
   }
 
@@ -173,7 +174,7 @@ int llopenReceiver(char *SerialPort) {
 
   strcpy(buf, "");
   printf("\nRECEIVER: reading SET\n");
-  readingArray(fd, SET, NULL);
+  readingArray(fd, SET, 0);
 
   printf("\nRECEIVER: sending UA\n");
   write(fd, UA, 5);
@@ -208,6 +209,8 @@ int llwrite(int fd, unsigned char *buffer, int length) {
   int frameSize = stuffingFrame(frame, length + 6);
 
   write(fd, frame, frameSize);
+
+  return 1;
 }
 
 int llread(int fd, unsigned char *buffer) {
@@ -215,7 +218,6 @@ int llread(int fd, unsigned char *buffer) {
   unsigned char frame[255];
   int over = 0;
   FileInfo file;
-  int frameSize;
   int ret;
   int fp;
   fp = open("teste.gif", O_CREAT | O_WRONLY);
@@ -246,6 +248,7 @@ int llread(int fd, unsigned char *buffer) {
   }
 
   printf("Terminei de ler\n");
+  return 1;
 }
 
 int readingFrame(int fd, unsigned char *frame) {
@@ -315,7 +318,6 @@ int processingDataFrame(unsigned char *frame, FileInfo *file, int fp) {
     int k = 256 * (int)l2 + (int)l1;
     printf("k : %d\n", k);
     printf("fp : %d\n", fp);
-    unsigned char data[MAX_SIZE];
 
     for (i = 0; i < k; i++) {
       // printf("%d : %X\n", i, frame[frameIndex+i]);
@@ -328,7 +330,6 @@ int processingDataFrame(unsigned char *frame, FileInfo *file, int fp) {
 
 int stuffingFrame(unsigned char *frame, int frameSize) {
   int i;
-  int j;
 
   for (i = 1; i < frameSize - 1; i++) {
     if (frame[i] == FLAG) {
@@ -350,7 +351,6 @@ int stuffingFrame(unsigned char *frame, int frameSize) {
 }
 
 int shiftFrame(unsigned char *frame, int i, int frameSize, int shiftDirection) {
-  unsigned char temp;
   if (shiftDirection == 0) {
 
     frameSize--;
@@ -368,6 +368,8 @@ int shiftFrame(unsigned char *frame, int i, int frameSize, int shiftDirection) {
       }
     } while (!over);
   }
+
+  return 1;
 }
 
 int destuffingFrame(unsigned char *frame) {
@@ -385,4 +387,6 @@ int destuffingFrame(unsigned char *frame) {
     }
     i++;
   }
+
+  return 1;
 }
