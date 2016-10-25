@@ -34,6 +34,8 @@ int appLayer(char *SerialPort, enum Functionality func) {
 
 int sendData() {
 
+  int seqNumber = 0;
+  int seqAnswer;
   FileInfo file;
   getFile(file.filename);
   FILE *fp;
@@ -65,15 +67,42 @@ int sendData() {
 
   while (ret != 0) {
     ret = sendDataPackage(dataPacket, fp, 0, &dataPacketSize);
-    if(ret != 0){
+    if (ret != 0) {
+      //alarm(3);
       llwrite(fd, dataPacket, dataPacketSize);
     }
-    // TODO : Implementar o controlo de fluxo
+    seqNumber=checkAnswer(fd, seqNumber, dataPacket, dataPacketSize);
+    //alarm(0);
   }
 
   controlPacketSize = sendControlPackage(END_CTRL_PACKET, file, controlPacket);
 
   llwrite(fd, controlPacket, controlPacketSize);
+}
+
+int checkAnswer(int fd, int seqNumber, unsigned char dataPacket[DATA_SIZE +4], int dataPacketSize){
+  int seqTemp = receiveAnswer(fd, seqNumber);
+  if (seqTemp == 1) {
+    return 1;
+  } else if (seqTemp == 0) {
+    return 0;
+  } else if (seqTemp == RETURN_REJ) {
+      llwrite(fd, dataPacket, dataPacketSize);
+      checkAnswer(fd, seqNumber, dataPacket, dataPacketSize);
+  }
+}
+
+int receiveAnswer(int fd, int seqNumber) {
+  int over = 0;
+  unsigned char supervisionFrame[5];
+  if (seqNumber == 0) {
+    if (readingArray(fd, RR1, seqNumber) == 1)
+      return 1;
+  } else if (seqNumber == 1) {
+    if (readingArray(fd, RR0, seqNumber) == 1)
+      return 0;
+  } else if (readingArray(fd, RR1, seqNumber) == RETURN_REJ)
+    return RETURN_REJ;
 }
 
 int receiveData() {
@@ -118,7 +147,8 @@ int sendControlPackage(int state, FileInfo file, unsigned char *controlPacket) {
   return controlPacketSize;
 }
 
-int sendDataPackage(unsigned char *dataPacket, FILE *fp, int sequenceNumber, int *length) {
+int sendDataPackage(unsigned char *dataPacket, FILE *fp, int sequenceNumber,
+                    int *length) {
 
   unsigned char buffer[DATA_SIZE];
   int ret;

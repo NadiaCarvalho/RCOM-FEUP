@@ -113,21 +113,31 @@ int setTermiosStructure() {
   return 1;
 }
 
-int readingArray(int fd, char compareTo[]) {
+int readingArray(int fd, char compareTo[], int answer) {
   ReadingArrayState state = START;
   int res;
-
+  int returnValue;
   char buf[255];
 
   int i = 0;
   while (1) {
     res = read(fd, buf, 1);
+    if (buf[0] == C_REJ0 || buf[0] == C_REJ1) {
+      if (answer == 0) {
+        compareTo = REJ0;
+      } else
+        compareTo = REJ1;
+    }
     if (buf[0] == compareTo[i]) {
       i++;
       state = nextState(state);
       if (state == SUCCESS) {
         success = 1;
-        return 1;
+        if (compareTo != REJ0 && compareTo != REJ1)
+          returnValue = TRUE;
+        else if (compareTo == REJ0 || compareTo == REJ1)
+          returnValue = RETURN_REJ;
+        return returnValue;
       }
     } else {
       if (buf[0] == FLAG_STATE) {
@@ -150,7 +160,7 @@ int llopenTransmiter(char *SerialPort) {
   strcpy(buf, "");
 
   alarm(3);
-  if (readingArray(fd, UA)) {
+  if (readingArray(fd, UA, NULL)) {
     alarm(0);
   }
 
@@ -163,7 +173,7 @@ int llopenReceiver(char *SerialPort) {
 
   strcpy(buf, "");
   printf("\nRECEIVER: reading SET\n");
-  readingArray(fd, SET);
+  readingArray(fd, SET, NULL);
 
   printf("\nRECEIVER: sending UA\n");
   write(fd, UA, 5);

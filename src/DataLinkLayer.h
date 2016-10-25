@@ -17,8 +17,13 @@
 #define A 0x03
 #define C_SET 0x03
 #define C_UA 0x07
+#define C_RR1 0x85
+#define C_RR0 0x05
+#define C_REJ0 0x01
+#define C_REJ1 0x81
 #define FILE_SIZE 0
 #define FILE_NAME 1
+#define RETURN_REJ 2
 #define NUMBER_OF_SEQUENCE_0 0x00
 #define NUMBER_OF_SEQUENCE_1 0x40
 #define FIELD_CONTROL 2
@@ -41,6 +46,14 @@ typedef enum {
 static char SET[5] = {FLAG, A, C_SET, A ^ C_SET, FLAG};
 
 static char UA[5] = {FLAG, A, C_UA, A ^ C_UA, FLAG};
+
+static char RR1[5] = {FLAG, A, C_RR1, A ^ C_SET, FLAG};
+
+static char RR0[5] = {FLAG, A, C_RR0, A ^ C_UA, FLAG};
+
+static char REJ0[5] = {FLAG, A, C_REJ0, A ^ C_SET, FLAG};
+
+static char REJ1[5] = {FLAG, A, C_REJ1, A ^ C_UA, FLAG};
 
 void atender();
 
