@@ -63,7 +63,7 @@ int sendData() {
   unsigned char dataPacket[DATA_SIZE + 4];
   int ret;
 
-  while (ret != 0) {
+ while (ret != 0) {
     ret = sendDataPackage(dataPacket, fp, 0, &dataPacketSize);
     if(ret != 0){
       llwrite(fd, dataPacket, dataPacketSize);

@@ -177,7 +177,7 @@ int llwrite(int fd, unsigned char *buffer, int length) {
   int sequenceNumber = 0;
 
   frame[0] = FLAG;
-  frame[1] = A;
+  frame[1] = A_SENDER_RECEIVER;
   // TODO: campo de control != sequenceNumber
   frame[2] = (unsigned char)sequenceNumber;
   frame[3] = 0; // bcc1
@@ -191,11 +191,22 @@ int llwrite(int fd, unsigned char *buffer, int length) {
   frame[length + 4] = 0; // bcc2
   frame[length + 5] = FLAG;
 
-  for (i = 0; i < length + 6; i++) {
+  int frameSize = stuffingFrame(frame, length + 6);
+
+  for (i = 0; i < frameSize; i++) {
     printf("%d : %02X \n", i, frame[i]);
   }
 
-  int frameSize = stuffingFrame(frame, length + 6);
+  if(frameSize!=(length+6)){
+  //  if(frameSize<255)
+      printf("ENTREI\n");
+      frame[7]=frameSize-10;
+  /*  else{
+      //TODO: verify this
+        frame[6]=frame[6]+1;
+        frame[7]=frameSize-length+6;
+      }*/
+    }
 
   write(fd, frame, frameSize);
 }
@@ -213,7 +224,7 @@ int llread(int fd, unsigned char *buffer) {
     printf("Could not open file  test.c");
     return -1;
   }
-  fchmod(fp, 777);
+
   printf("opened file teste.gif\n pointer : %d\n", fp);
 
   printf("\nVou começar a ler\n");
@@ -237,7 +248,7 @@ int llread(int fd, unsigned char *buffer) {
 
   printf("Terminei de ler\n");
 }
-
+/*
 int readingFrame(int fd, unsigned char *frame) {
   unsigned char oneByte;
   int over = 0;
@@ -260,6 +271,129 @@ int readingFrame(int fd, unsigned char *frame) {
   }
 
   return i; // returning the size of the frame
+}*/
+
+ReadingArrayState nextStateDataFrame(ReadingArrayState currentState, unsigned char byte){
+  ReadingArrayState newState;
+
+  switch (currentState) {
+    case START:
+      newState = FLAG_STATE;
+      break;
+    case FLAG_STATE:
+      newState = A_STATE;
+      break;
+    case A_STATE:
+      newState = C_STATE;
+      break;
+    case C_STATE:
+      newState = BCC;   // TODO : see what is the bcc1 value
+      break;
+    case BCC:
+      if(byte == START_CTRL_PACKET || byte == END_CTRL_PACKET)
+        newState = CONTROL_C;
+      else if(byte == DATA_CTRL_PACKET)
+        newState = DATA_C;
+      break;
+    case CONTROL_C:
+      newState = CONTROL_T1;
+      break;
+    case CONTROL_T1:
+      newState = CONTROL_L1;
+      break;
+    case CONTROL_L1:
+      newState = CONTROL_DATA1;
+      break;
+    case CONTROL_DATA1:
+      newState = CONTROL_T2;
+      break;
+    case CONTROL_T2:
+      newState = CONTROL_L2;
+      break;
+    case CONTROL_L2:
+      newState = CONTROL_DATA2;
+      break;
+    case CONTROL_DATA2:
+      newState = BCC2;
+      break;
+    case DATA_C:
+      newState = DATA_N;
+      break;
+    case DATA_N:
+      newState = DATA_L2;
+      break;
+    case DATA_L2:
+      newState = DATA_L1;
+      break;
+    case DATA_L1:
+      newState = DATA_FIELD;
+      break;
+    case DATA_FIELD:
+      newState = BCC2;
+      break;
+    case BCC2:
+      newState = FINAL_FLAG;
+      break;
+    case FINAL_FLAG:
+      newState = SUCCESS;
+      break;
+  }
+
+  return newState;
+}
+
+int readingFrame(int fd, unsigned char *frame) {
+  ReadingArrayState state=START;
+  unsigned char oneByte;
+  unsigned char length = 0;
+  int i = 0;
+  int nextState = 1;
+  int j;
+
+  while(1){
+
+    read(fd, &oneByte, 1);
+//    printf("byte : %X\n", oneByte);
+
+    state = nextStateDataFrame(state, oneByte);
+
+    if(state == CONTROL_L1 || state == CONTROL_L2){
+      length = oneByte;
+    }
+    else if(state == DATA_L2){
+      length = oneByte;
+    }
+    else if(state == DATA_L1){
+      length = 256 * length + oneByte;
+      printf("length : %d\n", length);
+    }
+    else if(state == CONTROL_DATA1 || state == CONTROL_DATA2 || state == DATA_FIELD){
+      frame[i] = oneByte;
+      i++;
+      for(j=0; j < length-1;j++){
+        read(fd, &oneByte, 1);
+        frame[i] = oneByte;
+        i++;
+      }
+      continue;
+    }
+
+    frame[i] = oneByte;
+    i++;
+
+    if(state == FINAL_FLAG){
+      printf("ACABEI\n");
+      break;
+    }
+  }
+
+  printf("\n\n");
+
+  for(j=0;j<i;j++){
+    printf("%d : %X\n", j, frame[j]);
+  }
+
+  return 0;
 }
 
 int processingDataFrame(unsigned char *frame, FileInfo *file, int fp) {

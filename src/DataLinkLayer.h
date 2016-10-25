@@ -14,9 +14,12 @@
 #define ESC 0x7D
 #define FLAG_HIDE_BYTE 0x5E
 #define ESC_HIDE_BYTE 0x5D
-#define A 0x03
+#define A_SENDER_RECEIVER 0x03
+#define A_RECEIVER_SENDER 0x01
 #define C_SET 0x03
 #define C_UA 0x07
+#define C_DATA_SEQUENCE_0 0x00
+#define C_DATA_SEQUENCE_1 0x40
 #define FILE_SIZE 0
 #define FILE_NAME 1
 #define NUMBER_OF_SEQUENCE_0 0x00
@@ -34,13 +37,27 @@ typedef enum {
   A_STATE,
   C_STATE,
   BCC,
-  SUCCESS
+  SUCCESS,
+  CONTROL_C,
+  CONTROL_T1,
+  CONTROL_L1,
+  CONTROL_DATA1,
+  CONTROL_T2,
+  CONTROL_L2,
+  CONTROL_DATA2,
+  DATA_C,
+  DATA_N,
+  DATA_L2,
+  DATA_L1,
+  DATA_FIELD,
+  BCC2,
+  FINAL_FLAG
 } ReadingArrayState;
 
 // SET = F-A-C-BCC-F
-static char SET[5] = {FLAG, A, C_SET, A ^ C_SET, FLAG};
+static char SET[5] = {FLAG, A_SENDER_RECEIVER, C_SET, A_SENDER_RECEIVER ^ C_SET, FLAG};
 
-static char UA[5] = {FLAG, A, C_UA, A ^ C_UA, FLAG};
+static char UA[5] = {FLAG, A_SENDER_RECEIVER, C_UA, A_SENDER_RECEIVER ^ C_UA, FLAG};
 
 void atender();
 
