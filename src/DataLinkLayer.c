@@ -206,14 +206,17 @@ int llwrite(int fd, unsigned char *buffer, int length) {
   }
  (void)signal(SIGALRM, retry);
   frameSize = stuffingFrame(frame, length + 6);
- 	alarm(3);
+	do{
+alarm(3);
   write(fd, frame, frameSize);
 	read(fd,temp,5);
-	alarm(0);	
+	alarm(0);
+}while(temp[2]==C_REJ);
+ 		
 }
 
 int llread(int fd, unsigned char *buffer) {
-
+int sizeAfterDestuffing=0;
   unsigned char frame[255];
   int over = 0;
   FileInfo file;
@@ -234,23 +237,27 @@ int llread(int fd, unsigned char *buffer) {
 
     readingFrame(fd, frame);
 
-    destuffingFrame(frame);
+   sizeAfterDestuffing = destuffingFrame(frame);
 
     // Processing frame
     if (frame[FIELD_CONTROL] == NUMBER_OF_SEQUENCE_0 ||
         frame[FIELD_CONTROL] == NUMBER_OF_SEQUENCE_1) {
-      ret = processingDataFrame(frame, &file, fp);
+      ret = processingDataFrame(frame, &file, fp, sizeAfterDestuffing);
     }
 
     if (ret == END_CTRL_PACKET) {
       over = 1;
     }
-
-	if(frame[FIELD_CONTROL] == NUMBER_OF_SEQUENCE_0){
+	if(ret==-1){
+		write(fd,REJ,5);	
+	}
+	else {
+		if(frame[FIELD_CONTROL] == NUMBER_OF_SEQUENCE_0){
 		write(fd,RR1,5);
-	}else
+		}else
 		write(fd,RR0,5);
-  }
+	}  
+}
 
   printf("Terminei de ler\n");
 }
@@ -279,11 +286,25 @@ int readingFrame(int fd, unsigned char *frame) {
   return i; // returning the size of the frame
 }
 
-int processingDataFrame(unsigned char *frame, FileInfo *file, int fp) {
+int processingDataFrame(unsigned char *frame, FileInfo *file, int fp, int sizeAfterDestuffing) {
   int frameIndex = 4; // Where the packet starts
   int i;
   int numberOfBytes;
   int ret;
+
+  if(frame[0] != FLAG){
+	return -1;
+  }
+
+  if( frame[1] != A){
+        return -1;
+  }
+
+  if( frame[2] != NUMBER_OF_SEQUENCE_0 && frame[2] != NUMBER_OF_SEQUENCE_1){
+        return -1;
+  }
+
+  // TODO : Do bcc
 
   // Testing to see if is a control packet
   if (frame[frameIndex] == START_CTRL_PACKET ||
@@ -312,7 +333,8 @@ int processingDataFrame(unsigned char *frame, FileInfo *file, int fp) {
   } else if (frame[frameIndex] == DATA_CTRL_PACKET) {
     ret = frame[frameIndex];
     frameIndex += 2; // TODO : Estou a ignorar o número de sequênon-canonical
-
+	
+	
     int l2 = frame[frameIndex];
     frameIndex++;
     int l1 = frame[frameIndex];
@@ -321,14 +343,19 @@ int processingDataFrame(unsigned char *frame, FileInfo *file, int fp) {
     //    printf("l2 : %d\n" , l2);
     int k = 256 * (int)l2 + (int)l1;
     printf("k : %d\n", k);
-    printf("fp : %d\n", fp);
     unsigned char data[MAX_SIZE];
-
+	
+	if(k!=sizeAfterDestuffing-10){
+		printf("ERRO\n");
+		return -1;
+	}
     for (i = 0; i < k; i++) {
       // printf("%d : %X\n", i, frame[frameIndex+i]);
       write(fp, &frame[frameIndex + i], 1);
     }
   }
+
+  
 
   return ret;
 }
@@ -392,4 +419,6 @@ int destuffingFrame(unsigned char *frame) {
     }
     i++;
   }
+  printf("tamanho apos destuffing: %d\n", i);
+  return i;
 }

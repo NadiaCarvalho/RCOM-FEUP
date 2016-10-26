@@ -24,6 +24,7 @@
 #define FIELD_CONTROL 2
 #define C_RR0 0x05
 #define C_RR1 0x85
+#define C_REJ 0x01
 
 struct termios oldtio, newtio;
 
@@ -48,6 +49,8 @@ static char RR0[5] = {FLAG, A, C_RR0, A ^  C_RR0, FLAG};
 
 static char RR1[5] = {FLAG, A, C_RR1, A ^  C_RR1, FLAG};
 
+static char REJ[5] = {FLAG, A, C_REJ, A ^  C_REJ, FLAG};
+
 void atender();
 
 void retry();
@@ -70,7 +73,7 @@ int llread(int fd, unsigned char *buffer);
 
 int readingFrame(int fd, unsigned char *frame);
 
-int processingDataFrame(unsigned char *frame, FileInfo *file, int fp);
+int processingDataFrame(unsigned char *frame, FileInfo *file, int fp, int sizeAfterDestuffing);
 
 int stuffingFrame(unsigned char *frame, int frameSize);
 
