@@ -1,4 +1,6 @@
-#include <stdlib.h>
+#include "AppLayer.h"
+#include "DataLinkLayer.h"
+#include "Utilities.h"
 #include <fcntl.h>
 #include <signal.h>
 #include <stdio.h>
@@ -7,17 +9,6 @@
 #include <sys/types.h>
 #include <termios.h>
 #include <unistd.h>
-#include "DataLinkLayer.h"
-#include "AppLayer.h"
-#include "Utilities.h"
-
-int dataPacketSize;
-unsigned char dataPacket[DATA_SIZE + 4];
-
-void retry(){
-  alarm(3);
-  llwrite(fd, dataPacket, dataPacketSize);
-}
 
 int appLayer(char *SerialPort, enum Functionality func) {
 
@@ -42,21 +33,18 @@ int appLayer(char *SerialPort, enum Functionality func) {
 }
 
 int sendData() {
-
-  int seqNumber = 0;
-  int ret=0;
+	
+	char sequenceNumber = NUMBER_OF_SEQUENCE_0;
   FileInfo file;
-  getFile((char*)file.filename);
+  getFile(file.filename);
   FILE *fp;
-  fp = fopen((char*)file.filename, "rb");
+  fp = fopen(file.filename, "rb");
   if (fp == NULL) {
     printf("Could not open file  test.c");
     return -1;
   }
   printf("opened file %s\n", file.filename);
-
-  (void)signal(SIGALRM, retry); // instala  rotina que atende interrupcao
-
+	(void)signal(SIGALRM, retry);
   // Determine file size
   file.size = fileSize(fp);
   printf("%d\n", file.size);
@@ -64,68 +52,51 @@ int sendData() {
   unsigned char fileSize[50];
   memcpy(fileSize, &file.size, sizeof(file.size));
 
-  int packetSize = 5 + strlen((char*)file.filename) + strlen((char*)fileSize);
+  int packetSize = 5 + strlen(file.filename) + strlen(fileSize);
 
   unsigned char controlPacket[packetSize];
+
   int controlPacketSize =
       sendControlPackage(START_CTRL_PACKET, file, controlPacket);
 
+	controlPacket[controlPacketSize] = sequenceNumber;
+	controlPacketSize++;
+
   llwrite(fd, controlPacket, controlPacketSize);
+
+  int dataPacketSize;
+  unsigned char dataPacket[DATA_SIZE + 4];
+  int ret;
+	
 
   while (ret != 0) {
     ret = sendDataPackage(dataPacket, fp, 0, &dataPacketSize);
-    if (ret != 0) {
-      alarm(3);
-      llwrite(fd, dataPacket, dataPacketSize);
+    if(ret != 0){
+		dataPacket[dataPacketSize] = sequenceNumber;
+		dataPacketSize++;
+      	llwrite(fd, dataPacket, dataPacketSize);
+		if(sequenceNumber == NUMBER_OF_SEQUENCE_0)
+			sequenceNumber=NUMBER_OF_SEQUENCE_1;
+		else sequenceNumber=NUMBER_OF_SEQUENCE_0;
+		
     }
-    seqNumber=checkAnswer(fd, seqNumber, dataPacket, dataPacketSize);
-    alarm(0);
+    // TODO : Implementar o controlo de fluxo
   }
 
   controlPacketSize = sendControlPackage(END_CTRL_PACKET, file, controlPacket);
+	controlPacket[controlPacketSize] = sequenceNumber;
+	controlPacketSize++;
 
   llwrite(fd, controlPacket, controlPacketSize);
-
-  return 1;
-}
-
-int checkAnswer(int fd, int seqNumber, unsigned char dataPacket[DATA_SIZE +4], int dataPacketSize){
-  int seqTemp = receiveAnswer(fd, seqNumber);
-  if (seqTemp == 1) {
-    return 1;
-  } else if (seqTemp == 0) {
-    return 0;
-  } else if (seqTemp == RETURN_REJ) {
-      llwrite(fd, dataPacket, dataPacketSize);
-      checkAnswer(fd, seqNumber, dataPacket, dataPacketSize);
-  }
-
-  return 1;
-}
-
-int receiveAnswer(int fd, int seqNumber) {
-  if (seqNumber == 0) {
-    if (readingArray(fd, RR1, seqNumber) == 1)
-      return 1;
-  }
-  else if (seqNumber == 1) {
-    if (readingArray(fd, RR0, seqNumber) == 1)
-      return 0;
-  }
-  else if (readingArray(fd, RR1, seqNumber) == RETURN_REJ)
-    return RETURN_REJ;
-
-
-  return -1;
-
 }
 
 int receiveData() {
+
+  char fileName[255];
+
   // read(fd, fileName, 255);
   unsigned char buffer[255];
   llread(fd, buffer);
-
-  return 1;
 }
 
 int sendControlPackage(int state, FileInfo file, unsigned char *controlPacket) {
@@ -139,30 +110,29 @@ int sendControlPackage(int state, FileInfo file, unsigned char *controlPacket) {
 
   controlPacket[0] = (unsigned char)state;
   controlPacket[1] = (unsigned char)0; // 0-tamanho do ficheiro
-  controlPacket[2] = (unsigned char)strlen((char*)fileSize);
+  controlPacket[2] = (unsigned char)strlen(fileSize);
   controlPacketSize = 3;
   // um char é sempre um byte?
-  unsigned int i;
-  for (i = 0; i < strlen((char*)fileSize); i++) {
+  int i;
+  for (i = 0; i < strlen(fileSize); i++) {
     controlPacket[i + 3] = fileSize[i];
   }
-  controlPacketSize += strlen((char*)fileSize);
+  controlPacketSize += strlen(fileSize);
 
   controlPacket[controlPacketSize] = (unsigned char)1; // 0-tamanho do ficheiro
   controlPacketSize++;
-  controlPacket[controlPacketSize] = (unsigned char)strlen((char*)file.filename);
+  controlPacket[controlPacketSize] = (unsigned char)strlen(file.filename);
   controlPacketSize++;
 
-  for (i = 0; i < strlen((char*)file.filename); i++) {
+  for (i = 0; i < strlen(file.filename); i++) {
     controlPacket[controlPacketSize + i] = file.filename[i];
   }
-  controlPacketSize += strlen((char*)file.filename);
+  controlPacketSize += strlen(file.filename);
 
   return controlPacketSize;
 }
 
-int sendDataPackage(unsigned char *dataPacket, FILE *fp, int sequenceNumber,
-                    int *length) {
+int sendDataPackage(unsigned char *dataPacket, FILE *fp, int sequenceNumber, int *length) {
 
   unsigned char buffer[DATA_SIZE];
   int ret;
@@ -202,5 +172,4 @@ int llopen(char *SerialPort, enum Functionality func) {
     llopenReceiver(SerialPort);
     break;
   }
-  return 1;
 }

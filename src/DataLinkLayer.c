@@ -1,17 +1,18 @@
 /*Non-Canonical Input Processing*/
-#include <stdio.h>
-#include <stdlib.h>
+
+#include "DataLinkLayer.h"
 #include <fcntl.h>
 #include <signal.h>
+#include <stdio.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <string.h>
+#include <termios.h>
 #include <unistd.h>
-#include "AppLayer.h"
-#include "DataLinkLayer.h"
 
 int flag = 1, tries = 0, success = 0, fail = 0;
-
+unsigned char frame[255];
+char temp[5];
+int frameSize=0;
 
 void atende() {
   tries++;
@@ -27,6 +28,13 @@ void atende() {
       exit(1);
     }
   }
+}
+
+void retry(){
+		alarm(3);
+	  write(fd, frame, frameSize);
+	read(fd,temp,5);
+	alarm(0);
 }
 
 ReadingArrayState nextState(ReadingArrayState state) {
@@ -45,8 +53,6 @@ ReadingArrayState nextState(ReadingArrayState state) {
     break;
   case BCC:
     state = SUCCESS;
-    break;
-  default:
     break;
   }
 
@@ -70,12 +76,12 @@ int openSerialPort(char *SerialPort) {
 
 int closeSerialPort(char *SerialPort) {
   // set old settings
-  if (tcsetattr((int)SerialPort, TCSANOW, &oldtio) < 0) {
+  if (tcsetattr(SerialPort, TCSANOW, &oldtio) < 0) {
     printf("ERROR in closeSerialPort(): could not set old termios\n");
     return -1;
   }
 
-  close((int)SerialPort);
+  close(SerialPort);
 
   return 0;
 }
@@ -117,30 +123,21 @@ int setTermiosStructure() {
   return 1;
 }
 
-int readingArray(int fd, char compareTo[], int answer) {
+int readingArray(int fd, char compareTo[]) {
   ReadingArrayState state = START;
-  int returnValue=-1;
+  int res;
+
   char buf[255];
 
   int i = 0;
   while (1) {
     res = read(fd, buf, 1);
-    if (buf[0] == C_REJ0 || buf[0] == C_REJ1) {
-      if (answer == 0) {
-        compareTo = REJ0;
-      } else
-        compareTo = REJ1;
-    }
     if (buf[0] == compareTo[i]) {
       i++;
       state = nextState(state);
       if (state == SUCCESS) {
         success = 1;
-        if (compareTo != REJ0 && compareTo != REJ1)
-          returnValue = TRUE;
-        else if (compareTo == REJ0 || compareTo == REJ1)
-          returnValue = RETURN_REJ;
-        return returnValue;
+        return 1;
       }
     } else {
       if (buf[0] == FLAG_STATE) {
@@ -149,21 +146,21 @@ int readingArray(int fd, char compareTo[], int answer) {
         state = START;
     }
   }
-  return 1;
 }
 
 int llopenTransmiter(char *SerialPort) {
   char buf[255];
+  int i, sum = 0, speed = 0;
 
   // send SET
   res = write(fd, SET, 5);
-  printf("SENDER: sending SET\n");
+  printf("SENDER: sending SET\n", SET[0], SET[1], SET[2], SET[3], SET[4]);
   (void)signal(SIGALRM, atende); // instala  rotina que atende interrupcao
 
   strcpy(buf, "");
 
   alarm(3);
-  if (readingArray(fd, UA, 0)) {
+  if (readingArray(fd, UA)) {
     alarm(0);
   }
 
@@ -176,7 +173,7 @@ int llopenReceiver(char *SerialPort) {
 
   strcpy(buf, "");
   printf("\nRECEIVER: reading SET\n");
-  readingArray(fd, SET, 0);
+  readingArray(fd, SET);
 
   printf("\nRECEIVER: sending UA\n");
   write(fd, UA, 5);
@@ -186,13 +183,13 @@ int llopenReceiver(char *SerialPort) {
 }
 
 int llwrite(int fd, unsigned char *buffer, int length) {
-  unsigned char frame[255];
-  int sequenceNumber = 0;
-
+  
+  int sequenceNumber = buffer[length-1];
+	length--;
   frame[0] = FLAG;
   frame[1] = A;
   // TODO: campo de control != sequenceNumber
-  frame[2] = (unsigned char)sequenceNumber;
+  frame[2] = sequenceNumber;
   frame[3] = 0; // bcc1
 
   int i;
@@ -207,12 +204,12 @@ int llwrite(int fd, unsigned char *buffer, int length) {
   for (i = 0; i < length + 6; i++) {
     printf("%d : %02X \n", i, frame[i]);
   }
-
-  int frameSize = stuffingFrame(frame, length + 6);
-
+ (void)signal(SIGALRM, retry);
+  frameSize = stuffingFrame(frame, length + 6);
+ 	alarm(3);
   write(fd, frame, frameSize);
-
-  return 1;
+	read(fd,temp,5);
+	alarm(0);	
 }
 
 int llread(int fd, unsigned char *buffer) {
@@ -220,6 +217,7 @@ int llread(int fd, unsigned char *buffer) {
   unsigned char frame[255];
   int over = 0;
   FileInfo file;
+  int frameSize;
   int ret;
   int fp;
   fp = open("teste.gif", O_CREAT | O_WRONLY);
@@ -247,10 +245,14 @@ int llread(int fd, unsigned char *buffer) {
     if (ret == END_CTRL_PACKET) {
       over = 1;
     }
+
+	if(frame[FIELD_CONTROL] == NUMBER_OF_SEQUENCE_0){
+		write(fd,RR1,5);
+	}else
+		write(fd,RR0,5);
   }
 
   printf("Terminei de ler\n");
-  return 1;
 }
 
 int readingFrame(int fd, unsigned char *frame) {
@@ -281,7 +283,7 @@ int processingDataFrame(unsigned char *frame, FileInfo *file, int fp) {
   int frameIndex = 4; // Where the packet starts
   int i;
   int numberOfBytes;
-  int ret=-1;
+  int ret;
 
   // Testing to see if is a control packet
   if (frame[frameIndex] == START_CTRL_PACKET ||
@@ -320,6 +322,7 @@ int processingDataFrame(unsigned char *frame, FileInfo *file, int fp) {
     int k = 256 * (int)l2 + (int)l1;
     printf("k : %d\n", k);
     printf("fp : %d\n", fp);
+    unsigned char data[MAX_SIZE];
 
     for (i = 0; i < k; i++) {
       // printf("%d : %X\n", i, frame[frameIndex+i]);
@@ -332,6 +335,7 @@ int processingDataFrame(unsigned char *frame, FileInfo *file, int fp) {
 
 int stuffingFrame(unsigned char *frame, int frameSize) {
   int i;
+  int j;
 
   for (i = 1; i < frameSize - 1; i++) {
     if (frame[i] == FLAG) {
@@ -353,6 +357,7 @@ int stuffingFrame(unsigned char *frame, int frameSize) {
 }
 
 int shiftFrame(unsigned char *frame, int i, int frameSize, int shiftDirection) {
+  unsigned char temp;
   if (shiftDirection == 0) {
 
     frameSize--;
@@ -370,8 +375,6 @@ int shiftFrame(unsigned char *frame, int i, int frameSize, int shiftDirection) {
       }
     } while (!over);
   }
-
-  return 1;
 }
 
 int destuffingFrame(unsigned char *frame) {
@@ -389,6 +392,4 @@ int destuffingFrame(unsigned char *frame) {
     }
     i++;
   }
-
-  return 1;
 }
