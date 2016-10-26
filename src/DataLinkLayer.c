@@ -190,7 +190,7 @@ int llwrite(int fd, unsigned char *buffer, int length) {
   frame[1] = A;
   // TODO: campo de control != sequenceNumber
   frame[2] = sequenceNumber;
-  frame[3] = 0; // bcc1
+  frame[3] = frame[1]^frame[2];
 
   int i;
   for (i = 0; i < length; i++) {
@@ -198,7 +198,8 @@ int llwrite(int fd, unsigned char *buffer, int length) {
     // printf("%d : %02X \n", i, frame[i + 4]);
   }
 
-  frame[length + 4] = 0; // bcc2
+  frame[length + 4] = getBBC2(buffer,length);
+	printf("BCC: %X",frame[length+4]);
   frame[length + 5] = FLAG;
 
   for (i = 0; i < length + 6; i++) {
@@ -304,7 +305,8 @@ int processingDataFrame(unsigned char *frame, FileInfo *file, int fp, int sizeAf
         return -1;
   }
 
-  // TODO : Do bcc
+  if(frame[3]!= frame[1]^frame[2])	
+		return -1;
 
   // Testing to see if is a control packet
   if (frame[frameIndex] == START_CTRL_PACKET ||
@@ -331,6 +333,9 @@ int processingDataFrame(unsigned char *frame, FileInfo *file, int fp, int sizeAf
     printf("Tamanho : %d\n", file->size);
     printf("Nome : %s\n", file->filename);
   } else if (frame[frameIndex] == DATA_CTRL_PACKET) {
+	
+	
+	
     ret = frame[frameIndex];
     frameIndex += 2; // TODO : Estou a ignorar o número de sequênon-canonical
 	
@@ -344,6 +349,12 @@ int processingDataFrame(unsigned char *frame, FileInfo *file, int fp, int sizeAf
     int k = 256 * (int)l2 + (int)l1;
     printf("k : %d\n", k);
     unsigned char data[MAX_SIZE];
+	
+	if(frame[frameIndex+3+k]!=getBCC2(frame+frameIndex+3,k)){
+		printf("BCC RECEBIDO: %X",frame[frameIndex+3+k]);
+		printf("BCC ESPERADO: %X",getBCC2(frame+frameIndex+3,k));
+		return -1;
+	}
 	
 	if(k!=sizeAfterDestuffing-10){
 		printf("ERRO\n");
@@ -421,4 +432,15 @@ int destuffingFrame(unsigned char *frame) {
   }
   printf("tamanho apos destuffing: %d\n", i);
   return i;
+}
+
+unsigned char getBCC2(unsigned char * frame, unsigned int length){
+	unsigned char BCC=0;
+
+	int i=0;
+	for(i;i<length;i++){
+		BCC = BCC^frame[i];	
+	}
+
+	return BCC;
 }

@@ -132,6 +132,8 @@ int sendControlPackage(int state, FileInfo file, unsigned char *controlPacket) {
   return controlPacketSize;
 }
 
+
+
 int sendDataPackage(unsigned char *dataPacket, FILE *fp, int sequenceNumber, int *length) {
 
   unsigned char buffer[DATA_SIZE];

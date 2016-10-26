@@ -81,4 +81,6 @@ int shiftFrame(unsigned char *frame, int i, int frameSize, int shiftDirection);
 
 int destuffingFrame(unsigned char *frame);
 
+unsigned char getBCC2(unsigned char * frame, unsigned int length);
+
 #endif
