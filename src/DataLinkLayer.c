@@ -33,8 +33,8 @@ void atende() {
 void retry(){
 		alarm(3);
 	  write(fd, frame, frameSize);
-	read(fd,temp,5);
-	alarm(0);
+	  //read(fd,temp,5);
+	  //alarm(0);
 }
 
 ReadingArrayState nextState(ReadingArrayState state) {
@@ -183,7 +183,7 @@ int llopenReceiver(char *SerialPort) {
 }
 
 int llwrite(int fd, unsigned char *buffer, int length) {
-  
+
   int sequenceNumber = buffer[length-1];
 	length--;
   frame[0] = FLAG;
@@ -198,7 +198,7 @@ int llwrite(int fd, unsigned char *buffer, int length) {
     // printf("%d : %02X \n", i, frame[i + 4]);
   }
 
-  frame[length + 4] = getBBC2(buffer,length);
+  frame[length + 4] = getBCC2(buffer,length);
 	printf("BCC: %X",frame[length+4]);
   frame[length + 5] = FLAG;
 
@@ -213,7 +213,7 @@ alarm(3);
 	read(fd,temp,5);
 	alarm(0);
 }while(temp[2]==C_REJ);
- 		
+
 }
 
 int llread(int fd, unsigned char *buffer) {
@@ -250,14 +250,14 @@ int sizeAfterDestuffing=0;
       over = 1;
     }
 	if(ret==-1){
-		write(fd,REJ,5);	
+		write(fd,REJ,5);
 	}
 	else {
 		if(frame[FIELD_CONTROL] == NUMBER_OF_SEQUENCE_0){
 		write(fd,RR1,5);
 		}else
 		write(fd,RR0,5);
-	}  
+	}
 }
 
   printf("Terminei de ler\n");
@@ -305,8 +305,13 @@ int processingDataFrame(unsigned char *frame, FileInfo *file, int fp, int sizeAf
         return -1;
   }
 
-  if(frame[3]!= frame[1]^frame[2])	
-		return -1;
+  if(frame[3]!= (frame[1]^frame[2])){
+      printf("BCC1 recebido: %X\n", frame[3]);
+      printf("BCC1 esperado: %X\n",frame[1]^frame[2]);
+      printf("ERRO BCC1\n");
+    	return -1;
+  }
+
 
   // Testing to see if is a control packet
   if (frame[frameIndex] == START_CTRL_PACKET ||
@@ -333,13 +338,13 @@ int processingDataFrame(unsigned char *frame, FileInfo *file, int fp, int sizeAf
     printf("Tamanho : %d\n", file->size);
     printf("Nome : %s\n", file->filename);
   } else if (frame[frameIndex] == DATA_CTRL_PACKET) {
-	
-	
-	
+
+
+
     ret = frame[frameIndex];
     frameIndex += 2; // TODO : Estou a ignorar o número de sequênon-canonical
-	
-	
+
+
     int l2 = frame[frameIndex];
     frameIndex++;
     int l1 = frame[frameIndex];
@@ -349,13 +354,13 @@ int processingDataFrame(unsigned char *frame, FileInfo *file, int fp, int sizeAf
     int k = 256 * (int)l2 + (int)l1;
     printf("k : %d\n", k);
     unsigned char data[MAX_SIZE];
-	
-	if(frame[frameIndex+3+k]!=getBCC2(frame+frameIndex+3,k)){
-		printf("BCC RECEBIDO: %X",frame[frameIndex+3+k]);
-		printf("BCC ESPERADO: %X",getBCC2(frame+frameIndex+3,k));
+
+	if(frame[8+k]!=getBCC2(frame+4,k+4)){
+		printf("BCC RECEBIDO: %X",frame[8+k]);
+		printf("BCC ESPERADO: %X",getBCC2(frame+4,k+4));
 		return -1;
 	}
-	
+
 	if(k!=sizeAfterDestuffing-10){
 		printf("ERRO\n");
 		return -1;
@@ -366,7 +371,7 @@ int processingDataFrame(unsigned char *frame, FileInfo *file, int fp, int sizeAf
     }
   }
 
-  
+
 
   return ret;
 }
@@ -439,7 +444,7 @@ unsigned char getBCC2(unsigned char * frame, unsigned int length){
 
 	int i=0;
 	for(i;i<length;i++){
-		BCC = BCC^frame[i];	
+		BCC ^= frame[i];
 	}
 
 	return BCC;
