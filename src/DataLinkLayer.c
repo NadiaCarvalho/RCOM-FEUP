@@ -238,7 +238,7 @@ int sizeAfterDestuffing=0;
   int ret;
   int fp;
 
-  printf("\nVou começar a ler\n");
+  printf("\nStart reading\n");
 
   while (!over) {
 
@@ -253,7 +253,7 @@ int sizeAfterDestuffing=0;
     }
 
 	if(ret == START_CTRL_PACKET){
-	  	fp = open("teste.gif", O_CREAT | O_WRONLY);
+	  	fp = open(file.filename, O_CREAT | O_WRONLY);
   		if (fp == -1) {
     	printf("Could not open file  test.c");
     	return -1;
@@ -274,7 +274,7 @@ int sizeAfterDestuffing=0;
 	}
 }
 
-  printf("Terminei de ler\n");
+  printf("\nFile read\n");
 
   return 1;
 }
@@ -392,7 +392,7 @@ int processingDataFrame(unsigned char *frame, FileInfo *file, int fp, int sizeAf
   if (frame[frameIndex] == START_CTRL_PACKET ||
       frame[frameIndex] == END_CTRL_PACKET) {
     ret = frame[frameIndex];
-    printf("Ret : %d\n", ret);
+    //printf("Ret : %d\n", ret);
     frameIndex += 2; // TODO : Estou a ignorar o T
 
     numberOfBytes = frame[frameIndex];
@@ -410,8 +410,10 @@ int processingDataFrame(unsigned char *frame, FileInfo *file, int fp, int sizeAf
     // TODO : processar o bcc2
 
     // FIXME: remove printf
-    printf("Tamanho : %d\n", file->size);
-    printf("Nome : %s\n", file->filename);
+   // printf("Tamanho : %d\n", file->size);
+	if(ret == START_CTRL_PACKET){
+    	printf("\nFile name : %s\n", file->filename);
+	}
   } else if (frame[frameIndex] == DATA_CTRL_PACKET) {
 
 
@@ -427,13 +429,13 @@ int processingDataFrame(unsigned char *frame, FileInfo *file, int fp, int sizeAf
     frameIndex++;
     unsigned int l1 = frame[frameIndex];
     frameIndex++;
-    printf("l1 : %d\n" , l1);
-    printf("l2 : %d\n" , l2);
+    //printf("l1 : %d\n" , l1);
+    //printf("l2 : %d\n" , l2);
     unsigned int k = 256 * l2 + l1;
-	printf("k : %d\n", k);
+	//printf("k : %d\n", k);
 	if(frame[8+k]!=getBCC2(frame+4,k+4)){
-		printf("BCC RECEBIDO: %X\n",frame[8+k]);
-		printf("BCC ESPERADO: %X\n",getBCC2(frame+4,k+4));
+		printf("BCC received: %X\n",frame[8+k]);
+		printf("BCC expected: %X\n",getBCC2(frame+4,k+4));
 		return -1;
 	}
 
@@ -442,7 +444,7 @@ int processingDataFrame(unsigned char *frame, FileInfo *file, int fp, int sizeAf
 		return -1;
 	}
 
-	printf("Seq Number Receiver: %X \n",frame[counterIndex]);
+	//printf("Seq Number Receiver: %X \n",frame[counterIndex]);
 	if(previousDataCounter==0){
 		previousDataCounter=frame[counterIndex];
 	}else{
@@ -530,7 +532,7 @@ int destuffingFrame(unsigned char *frame) {
     }
     i++;
   }
-  printf("tamanho apos destuffing: %d\n", i);
+  //printf("tamanho apos destuffing: %d\n", i);
   return i;
 }
 
