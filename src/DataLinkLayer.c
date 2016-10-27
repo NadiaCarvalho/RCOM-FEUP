@@ -227,14 +227,7 @@ int sizeAfterDestuffing=0;
   FileInfo file;
   int ret;
   int fp;
-  fp = open("teste.gif", O_CREAT | O_WRONLY);
-  if (fp == -1) {
-    printf("Could not open file  test.c");
-    return -1;
-  }
-  fchmod(fp, 777);
-  printf("opened file teste.gif\n pointer : %d\n", fp);
-
+  
   printf("\nVou começar a ler\n");
 
   while (!over) {
@@ -246,8 +239,16 @@ int sizeAfterDestuffing=0;
     // Processing frame
     if (frame[FIELD_CONTROL] == NUMBER_OF_SEQUENCE_0 ||
         frame[FIELD_CONTROL] == NUMBER_OF_SEQUENCE_1) {
-      ret = processingDataFrame(frame, &file, fp, sizeAfterDestuffing);
+      	ret = processingDataFrame(frame, &file, fp, sizeAfterDestuffing);
     }
+
+	if(ret == START_CTRL_PACKET){	
+	  	fp = open("teste.gif", O_CREAT | O_WRONLY);
+  		if (fp == -1) {
+    	printf("Could not open file  test.c");
+    	return -1;
+  		}
+	}
 
     if (ret == END_CTRL_PACKET) {
       over = 1;
@@ -267,7 +268,7 @@ int sizeAfterDestuffing=0;
 
   return 1;
 }
-
+/*
 int readingFrame(int fd, unsigned char *frame) {
   unsigned char oneByte;
   int over = 0;
@@ -287,6 +288,64 @@ int readingFrame(int fd, unsigned char *frame) {
       over = 1;
     }
     i++;
+  }
+
+  return i; // returning the size of the frame
+}*/
+
+int readingFrame(int fd, unsigned char *frame) {
+  unsigned char oneByte;
+  ReadingArrayState state = START;	
+  int over = 0;
+  int i = 0;
+
+  while (!over) {
+    read(fd, &oneByte, 1);
+	
+	switch(state){
+		case START:
+			if(oneByte == FLAG){
+				frame[i] = oneByte;
+				i++;
+				state = FLAG_STATE;
+			}
+			break;
+        case FLAG_STATE:
+			if(oneByte != FLAG){
+				frame[i] = oneByte;
+        		i++;
+				state = A_STATE;			
+			}
+			break;
+		case A_STATE:
+			if(oneByte != FLAG){
+				frame[i] = oneByte;
+        		i++;
+				state = C_STATE;			
+			}
+			break;
+        case C_STATE:
+			if(oneByte != FLAG){
+				frame[i] = oneByte;
+        		i++;
+				state = BCC;			
+			}
+			break;	
+		case BCC:
+			if(oneByte != FLAG){
+				frame[i] = oneByte;
+        		i++;			
+			}
+			else if(oneByte == FLAG){
+				frame[i] = oneByte;
+				i++;
+				over = 1;
+			}
+			break;
+		case SUCCESS:
+		default:
+			break;
+	}
   }
 
   return i; // returning the size of the frame
@@ -350,21 +409,21 @@ int processingDataFrame(unsigned char *frame, FileInfo *file, int fp, int sizeAf
     frameIndex += 2; // TODO : Estou a ignorar o número de sequênon-canonical
 
 
-    int l2 = frame[frameIndex];
+    unsigned int l2 = frame[frameIndex];
     frameIndex++;
-    int l1 = frame[frameIndex];
+    unsigned int l1 = frame[frameIndex];
     frameIndex++;
-    //  printf("l1 : %d\n" , l1);
-    //    printf("l2 : %d\n" , l2);
-    int k = 256 * (int)l2 + (int)l1;
-    printf("k : %d\n", k);
+    printf("l1 : %d\n" , l1);
+    printf("l2 : %d\n" , l2);
+    unsigned int k = 256 * l2 + l1;
+	printf("k : %d\n", k);
 	if(frame[8+k]!=getBCC2(frame+4,k+4)){
-		printf("BCC RECEBIDO: %X",frame[8+k]);
-		printf("BCC ESPERADO: %X",getBCC2(frame+4,k+4));
+		printf("BCC RECEBIDO: %X\n",frame[8+k]);
+		printf("BCC ESPERADO: %X\n",getBCC2(frame+4,k+4));
 		return -1;
 	}
 
-	if(k!=sizeAfterDestuffing-10){
+	if(k!= (sizeAfterDestuffing-10)){
 		printf("ERRO\n");
 		return -1;
 	}
