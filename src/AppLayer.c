@@ -37,6 +37,7 @@ int appLayer(char *SerialPort, enum Functionality func) {
 int sendData() {
 
 	char sequenceNumber = NUMBER_OF_SEQUENCE_0;
+	int dataCounter=1;
   FileInfo file;
   getFile(file.filename);
   FILE *fp;
@@ -72,7 +73,10 @@ int sendData() {
 
 
   while (ret != 0) {
-    ret = sendDataPackage(dataPacket, fp, 0, &dataPacketSize);
+    ret = sendDataPackage(dataPacket, fp, dataCounter, &dataPacketSize);
+	if(dataCounter<255)
+		dataCounter++;
+	else dataCounter=1;
     if(ret != 0){
 		dataPacket[dataPacketSize] = sequenceNumber;
 		dataPacketSize++;
@@ -153,6 +157,7 @@ int sendDataPackage(unsigned char *dataPacket, FILE *fp, int sequenceNumber, int
 
   dataPacket[0] = DATA_CTRL_PACKET;
   dataPacket[1] = sequenceNumber;
+	printf("Seq Number %d\n",sequenceNumber);
   // L1
   dataPacket[2] = 0;
   // L2

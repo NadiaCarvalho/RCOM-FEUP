@@ -15,6 +15,7 @@ int flag = 1, tries = 0, success = 0, fail = 0;
 unsigned char frame[255];
 char temp[5];
 int frameSize=0;
+unsigned char previousDataCounter = 0;
 
 void atende() {
   tries++;
@@ -34,6 +35,7 @@ void atende() {
 
 void retry(){
 		alarm(3);
+		tcflush(fd,TCOFLUSH);
 	  write(fd, frame, frameSize);
 	  //read(fd,temp,5);
 	  //alarm(0);
@@ -356,6 +358,7 @@ int processingDataFrame(unsigned char *frame, FileInfo *file, int fp, int sizeAf
   int i;
   int numberOfBytes;
   int ret=1;
+	int dataCounterCheck=0;
 
   if(frame[0] != FLAG){
 	return -1;
@@ -406,7 +409,10 @@ int processingDataFrame(unsigned char *frame, FileInfo *file, int fp, int sizeAf
 
 
     ret = frame[frameIndex];
-    frameIndex += 2; // TODO : Estou a ignorar o número de sequênon-canonical
+	frameIndex++;
+	int counterIndex=frameIndex;	
+	frameIndex++;
+   // frameIndex += 2; // TODO : Estou a ignorar o número de sequênon-canonical
 
 
     unsigned int l2 = frame[frameIndex];
@@ -427,9 +433,27 @@ int processingDataFrame(unsigned char *frame, FileInfo *file, int fp, int sizeAf
 		printf("ERRO\n");
 		return -1;
 	}
+
+	printf("Seq Number Receiver: %X \n",frame[counterIndex]);
+	if(previousDataCounter==0){
+		previousDataCounter=frame[counterIndex];
+	}else{
+		if(previousDataCounter==frame[counterIndex]){
+			dataCounterCheck=1;
+			printf("Repeated frame\n");
+		}
+		else{
+			previousDataCounter=frame[counterIndex];
+			dataCounterCheck=0;
+		}
+			
+			
+	}
+
     for (i = 0; i < k; i++) {
       // printf("%d : %X\n", i, frame[frameIndex+i]);
-      write(fp, &frame[frameIndex + i], 1);
+		if(dataCounterCheck==0)
+      		write(fp, &frame[frameIndex + i], 1);
     }
   }
 
