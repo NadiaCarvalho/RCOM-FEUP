@@ -235,8 +235,12 @@ int sizeAfterDestuffing=0;
   unsigned char frame[255];
   int over = 0;
   FileInfo file;
+  file.size = 0;
   int ret;
   int fp;
+  int bytesRead = 0;
+  int percentage = 0;
+  int packagesLost = 0;
 
   printf("\nStart reading\n");
 
@@ -252,12 +256,22 @@ int sizeAfterDestuffing=0;
       	ret = processingDataFrame(frame, &file, fp, sizeAfterDestuffing);
     }
 
+	if( ret == -1){
+		packagesLost++;
+	}
+
 	if(ret == START_CTRL_PACKET){
 	  	fp = open(file.filename, O_CREAT | O_WRONLY);
   		if (fp == -1) {
     	printf("Could not open file  test.c");
     	return -1;
   		}
+	}
+
+	if( ret == DATA_CTRL_PACKET){
+		bytesRead += sizeAfterDestuffing - 10;
+		percentage = ( bytesRead * 100)/ file.size;
+		printf("Percentage : %d\n", percentage);
 	}
 
     if (ret == END_CTRL_PACKET) {
@@ -274,7 +288,11 @@ int sizeAfterDestuffing=0;
 	}
 }
 
-  printf("\nFile read\n");
+  	printf("\nFile read\n");
+
+  	//printf("\n\nStatistics\n\n");
+  	
+	//printf("Package Lost : %d\n", packagesLost);	
 
   return 1;
 }
@@ -397,7 +415,8 @@ int processingDataFrame(unsigned char *frame, FileInfo *file, int fp, int sizeAf
 
     numberOfBytes = frame[frameIndex];
     frameIndex++; // taking frame index to de begginning of the data
-    memcpy(&((*file).size), frame + frameIndex, numberOfBytes);
+   	memcpy(&((*file).size), frame + frameIndex, numberOfBytes);
+	
 
     frameIndex += numberOfBytes + 1; // TODO : Estou a ignorar o T
 
@@ -413,6 +432,7 @@ int processingDataFrame(unsigned char *frame, FileInfo *file, int fp, int sizeAf
    // printf("Tamanho : %d\n", file->size);
 	if(ret == START_CTRL_PACKET){
     	printf("\nFile name : %s\n", file->filename);
+		printf("\nFile size : %d\n", file->size);
 	}
   } else if (frame[frameIndex] == DATA_CTRL_PACKET) {
 
