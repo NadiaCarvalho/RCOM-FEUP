@@ -10,7 +10,7 @@
 
 int getFile(char *filepath) {
 
-  printf("Enter file path:");
+  printf("Enter file path : ");
   scanf("%s", filepath);
 
   return 1;

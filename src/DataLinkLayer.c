@@ -11,11 +11,12 @@
 #include <strings.h>
 #include "DataLinkLayer.h"
 
-int flag = 1, tries = 0, success = 0, fail = 0;
+int flag = 1, tries = 0, success = 0, fail = 0, triesPackets = 0;
 unsigned char frame[255];
 char temp[5];
 int frameSize=0;
 unsigned char previousDataCounter = 0;
+const int NUMBER_OF_TRIES = 3;
 
 void atende() {
   tries++;
@@ -27,7 +28,7 @@ void atende() {
       printf("SENDER: sending SET\n");
       write(fd, SET, 5);
     } else if (tries == 4) {
-      printf("Timeout: UA not acknowledge");
+      printf("TIMEOUT : UA not acknowledge");
       exit(1);
     }
   }
@@ -37,6 +38,14 @@ void retry(){
 		alarm(3);
 		//tcflush(fd,TCOFLUSH);
 	  write(fd, frame, frameSize);
+
+    if(triesPackets == NUMBER_OF_TRIES){
+      printf("\n\nTIMEOUT : Lost connection to receiver\n Number of tries : %d\n\n", NUMBER_OF_TRIES);
+      exit(1);
+    }
+
+    triesPackets++;
+    printf("\n\nTrying to connect to receiver\nTry number : %d\n\n", triesPackets);
 	  //read(fd,temp,5);
 	  //alarm(0);
 }
@@ -203,14 +212,13 @@ int llwrite(int fd, unsigned char *buffer, int length) {
   }
 
   frame[length + 4] = getBCC2(buffer,length);
-	printf("BCC: %X",frame[length+4]);
+
   frame[length + 5] = FLAG;
 
-  for (i = 0; i < length + 6; i++) {
-    printf("%d : %02X \n", i, frame[i]);
-  }
  (void)signal(SIGALRM, retry);
+
   frameSize = stuffingFrame(frame, length + 6);
+  
 	do{
 alarm(3);
   write(fd, frame, frameSize);
@@ -229,7 +237,7 @@ int sizeAfterDestuffing=0;
   FileInfo file;
   int ret;
   int fp;
-  
+
   printf("\nVou começar a ler\n");
 
   while (!over) {
@@ -244,7 +252,7 @@ int sizeAfterDestuffing=0;
       	ret = processingDataFrame(frame, &file, fp, sizeAfterDestuffing);
     }
 
-	if(ret == START_CTRL_PACKET){	
+	if(ret == START_CTRL_PACKET){
 	  	fp = open("teste.gif", O_CREAT | O_WRONLY);
   		if (fp == -1) {
     	printf("Could not open file  test.c");
@@ -297,13 +305,13 @@ int readingFrame(int fd, unsigned char *frame) {
 
 int readingFrame(int fd, unsigned char *frame) {
   unsigned char oneByte;
-  ReadingArrayState state = START;	
+  ReadingArrayState state = START;
   int over = 0;
   int i = 0;
 
   while (!over) {
     read(fd, &oneByte, 1);
-	
+
 	switch(state){
 		case START:
 			if(oneByte == FLAG){
@@ -316,27 +324,27 @@ int readingFrame(int fd, unsigned char *frame) {
 			if(oneByte != FLAG){
 				frame[i] = oneByte;
         		i++;
-				state = A_STATE;			
+				state = A_STATE;
 			}
 			break;
 		case A_STATE:
 			if(oneByte != FLAG){
 				frame[i] = oneByte;
         		i++;
-				state = C_STATE;			
+				state = C_STATE;
 			}
 			break;
         case C_STATE:
 			if(oneByte != FLAG){
 				frame[i] = oneByte;
         		i++;
-				state = BCC;			
+				state = BCC;
 			}
-			break;	
+			break;
 		case BCC:
 			if(oneByte != FLAG){
 				frame[i] = oneByte;
-        		i++;			
+        		i++;
 			}
 			else if(oneByte == FLAG){
 				frame[i] = oneByte;
@@ -410,7 +418,7 @@ int processingDataFrame(unsigned char *frame, FileInfo *file, int fp, int sizeAf
 
     ret = frame[frameIndex];
 	frameIndex++;
-	int counterIndex=frameIndex;	
+	int counterIndex=frameIndex;
 	frameIndex++;
    // frameIndex += 2; // TODO : Estou a ignorar o número de sequênon-canonical
 
@@ -446,8 +454,8 @@ int processingDataFrame(unsigned char *frame, FileInfo *file, int fp, int sizeAf
 			previousDataCounter=frame[counterIndex];
 			dataCounterCheck=0;
 		}
-			
-			
+
+
 	}
 
     for (i = 0; i < k; i++) {

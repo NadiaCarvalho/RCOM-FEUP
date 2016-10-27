@@ -50,7 +50,7 @@ int sendData() {
 	(void)signal(SIGALRM, retry);
   // Determine file size
   file.size = fileSize(fp);
-  printf("%d\n", file.size);
+  printf("File size : %d\n", file.size);
 
   char fileSize[50];
   memcpy(fileSize, &file.size, sizeof(file.size));
@@ -71,9 +71,9 @@ int sendData() {
   unsigned char dataPacket[DATA_SIZE + 4];
   int ret=1;
 
-
   while (ret != 0) {
     ret = sendDataPackage(dataPacket, fp, dataCounter, &dataPacketSize);
+
 	if(dataCounter<255)
 		dataCounter++;
 	else dataCounter=1;
@@ -86,7 +86,6 @@ int sendData() {
 		else sequenceNumber=NUMBER_OF_SEQUENCE_0;
 
     }
-    // TODO : Implementar o controlo de fluxo
   }
 
   controlPacketSize = sendControlPackage(END_CTRL_PACKET, file, controlPacket);
@@ -94,6 +93,8 @@ int sendData() {
 	controlPacketSize++;
 
   llwrite(fd, controlPacket, controlPacketSize);
+
+  printf("\n\nFile sent\n");
 
   return 1;
 }
@@ -157,7 +158,7 @@ int sendDataPackage(unsigned char *dataPacket, FILE *fp, int sequenceNumber, int
 
   dataPacket[0] = DATA_CTRL_PACKET;
   dataPacket[1] = sequenceNumber;
-	printf("Seq Number %d\n",sequenceNumber);
+
   // L1
   dataPacket[2] = 0;
   // L2
