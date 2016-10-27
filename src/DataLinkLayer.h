@@ -1,9 +1,15 @@
 #ifndef DATALINKLAYER_H
 #define DATALINKLAYER_H
 
-#include "AppLayer.h"
+
 #include <stdio.h>
 #include <termios.h>
+#include <fcntl.h>
+#include <signal.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include "AppLayer.h"
 
 #define BAUDRATE B38400
 #define MODEMDEVICE "/dev/ttyS1"

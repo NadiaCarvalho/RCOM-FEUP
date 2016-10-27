@@ -1,6 +1,4 @@
 /*Non-Canonical Input Processing*/
-
-#include "DataLinkLayer.h"
 #include <fcntl.h>
 #include <signal.h>
 #include <stdio.h>
@@ -8,6 +6,10 @@
 #include <sys/types.h>
 #include <termios.h>
 #include <unistd.h>
+#include <stdlib.h>
+#include <string.h>
+#include <strings.h>
+#include "DataLinkLayer.h"
 
 int flag = 1, tries = 0, success = 0, fail = 0;
 unsigned char frame[255];
@@ -53,6 +55,8 @@ ReadingArrayState nextState(ReadingArrayState state) {
     break;
   case BCC:
     state = SUCCESS;
+    break;
+  case SUCCESS:
     break;
   }
 
@@ -125,7 +129,6 @@ int setTermiosStructure() {
 
 int readingArray(int fd, char compareTo[]) {
   ReadingArrayState state = START;
-  int res;
 
   char buf[255];
 
@@ -150,11 +153,10 @@ int readingArray(int fd, char compareTo[]) {
 
 int llopenTransmiter(char *SerialPort) {
   char buf[255];
-  int i, sum = 0, speed = 0;
 
   // send SET
   res = write(fd, SET, 5);
-  printf("SENDER: sending SET\n", SET[0], SET[1], SET[2], SET[3], SET[4]);
+  printf("SENDER: sending SET\n");
   (void)signal(SIGALRM, atende); // instala  rotina que atende interrupcao
 
   strcpy(buf, "");
@@ -214,6 +216,8 @@ alarm(3);
 	alarm(0);
 }while(temp[2]==C_REJ);
 
+return 1;
+
 }
 
 int llread(int fd, unsigned char *buffer) {
@@ -221,7 +225,6 @@ int sizeAfterDestuffing=0;
   unsigned char frame[255];
   int over = 0;
   FileInfo file;
-  int frameSize;
   int ret;
   int fp;
   fp = open("teste.gif", O_CREAT | O_WRONLY);
@@ -261,6 +264,8 @@ int sizeAfterDestuffing=0;
 }
 
   printf("Terminei de ler\n");
+
+  return 1;
 }
 
 int readingFrame(int fd, unsigned char *frame) {
@@ -291,7 +296,7 @@ int processingDataFrame(unsigned char *frame, FileInfo *file, int fp, int sizeAf
   int frameIndex = 4; // Where the packet starts
   int i;
   int numberOfBytes;
-  int ret;
+  int ret=1;
 
   if(frame[0] != FLAG){
 	return -1;
@@ -353,8 +358,6 @@ int processingDataFrame(unsigned char *frame, FileInfo *file, int fp, int sizeAf
     //    printf("l2 : %d\n" , l2);
     int k = 256 * (int)l2 + (int)l1;
     printf("k : %d\n", k);
-    unsigned char data[MAX_SIZE];
-
 	if(frame[8+k]!=getBCC2(frame+4,k+4)){
 		printf("BCC RECEBIDO: %X",frame[8+k]);
 		printf("BCC ESPERADO: %X",getBCC2(frame+4,k+4));
@@ -378,7 +381,6 @@ int processingDataFrame(unsigned char *frame, FileInfo *file, int fp, int sizeAf
 
 int stuffingFrame(unsigned char *frame, int frameSize) {
   int i;
-  int j;
 
   for (i = 1; i < frameSize - 1; i++) {
     if (frame[i] == FLAG) {
@@ -400,7 +402,7 @@ int stuffingFrame(unsigned char *frame, int frameSize) {
 }
 
 int shiftFrame(unsigned char *frame, int i, int frameSize, int shiftDirection) {
-  unsigned char temp;
+
   if (shiftDirection == 0) {
 
     frameSize--;
@@ -418,6 +420,8 @@ int shiftFrame(unsigned char *frame, int i, int frameSize, int shiftDirection) {
       }
     } while (!over);
   }
+
+  return 1;
 }
 
 int destuffingFrame(unsigned char *frame) {
@@ -442,8 +446,8 @@ int destuffingFrame(unsigned char *frame) {
 unsigned char getBCC2(unsigned char * frame, unsigned int length){
 	unsigned char BCC=0;
 
-	int i=0;
-	for(i;i<length;i++){
+	unsigned int i=0;
+	for(;i<length;i++){
 		BCC ^= frame[i];
 	}
 

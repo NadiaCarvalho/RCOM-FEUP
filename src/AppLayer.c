@@ -1,6 +1,3 @@
-#include "AppLayer.h"
-#include "DataLinkLayer.h"
-#include "Utilities.h"
 #include <fcntl.h>
 #include <signal.h>
 #include <stdio.h>
@@ -9,6 +6,11 @@
 #include <sys/types.h>
 #include <termios.h>
 #include <unistd.h>
+#include <stdlib.h>
+#include <strings.h>
+#include "DataLinkLayer.h"
+#include "AppLayer.h"
+#include "Utilities.h"
 
 int appLayer(char *SerialPort, enum Functionality func) {
 
@@ -33,7 +35,7 @@ int appLayer(char *SerialPort, enum Functionality func) {
 }
 
 int sendData() {
-	
+
 	char sequenceNumber = NUMBER_OF_SEQUENCE_0;
   FileInfo file;
   getFile(file.filename);
@@ -49,7 +51,7 @@ int sendData() {
   file.size = fileSize(fp);
   printf("%d\n", file.size);
 
-  unsigned char fileSize[50];
+  char fileSize[50];
   memcpy(fileSize, &file.size, sizeof(file.size));
 
   int packetSize = 5 + strlen(file.filename) + strlen(fileSize);
@@ -66,8 +68,8 @@ int sendData() {
 
   int dataPacketSize;
   unsigned char dataPacket[DATA_SIZE + 4];
-  int ret;
-	
+  int ret=1;
+
 
   while (ret != 0) {
     ret = sendDataPackage(dataPacket, fp, 0, &dataPacketSize);
@@ -78,7 +80,7 @@ int sendData() {
 		if(sequenceNumber == NUMBER_OF_SEQUENCE_0)
 			sequenceNumber=NUMBER_OF_SEQUENCE_1;
 		else sequenceNumber=NUMBER_OF_SEQUENCE_0;
-		
+
     }
     // TODO : Implementar o controlo de fluxo
   }
@@ -88,21 +90,21 @@ int sendData() {
 	controlPacketSize++;
 
   llwrite(fd, controlPacket, controlPacketSize);
+
+  return 1;
 }
 
 int receiveData() {
-
-  char fileName[255];
-
-  // read(fd, fileName, 255);
   unsigned char buffer[255];
   llread(fd, buffer);
+
+  return 1;
 }
 
 int sendControlPackage(int state, FileInfo file, unsigned char *controlPacket) {
 
   // TODO: refracting repeated code
-  unsigned char fileSize[50];
+  char fileSize[50];
 
   memcpy(fileSize, &file.size, sizeof(file.size));
 
@@ -113,7 +115,7 @@ int sendControlPackage(int state, FileInfo file, unsigned char *controlPacket) {
   controlPacket[2] = (unsigned char)strlen(fileSize);
   controlPacketSize = 3;
   // um char é sempre um byte?
-  int i;
+  unsigned int i;
   for (i = 0; i < strlen(fileSize); i++) {
     controlPacket[i + 3] = fileSize[i];
   }
@@ -174,4 +176,6 @@ int llopen(char *SerialPort, enum Functionality func) {
     llopenReceiver(SerialPort);
     break;
   }
+
+  return 1;
 }

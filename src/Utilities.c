@@ -1,4 +1,3 @@
-#include "Utilities.h"
 #include <fcntl.h>
 #include <signal.h>
 #include <stdio.h>
@@ -7,6 +6,7 @@
 #include <sys/types.h>
 #include <termios.h>
 #include <unistd.h>
+#include "Utilities.h"
 
 int getFile(char *filepath) {
 
