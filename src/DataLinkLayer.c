@@ -35,7 +35,7 @@ void atende() {
 
 void retry(){
 		alarm(3);
-		tcflush(fd,TCOFLUSH);
+		//tcflush(fd,TCOFLUSH);
 	  write(fd, frame, frameSize);
 	  //read(fd,temp,5);
 	  //alarm(0);
