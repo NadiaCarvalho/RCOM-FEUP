@@ -1,7 +1,6 @@
 #ifndef DATALINKLAYER_H
 #define DATALINKLAYER_H
 
-
 #include <stdio.h>
 #include <termios.h>
 #include <fcntl.h>
@@ -46,16 +45,16 @@ typedef enum {
   SUCCESS
 } ReadingArrayState;
 
-// SET = F-A-C-BCC-F
+
 static char SET[5] = {FLAG, A, C_SET, A ^ C_SET, FLAG};
 
 static char UA[5] = {FLAG, A, C_UA, A ^ C_UA, FLAG};
 
-static char RR0[5] = {FLAG, A, C_RR0, A ^  C_RR0, FLAG};
+static char RR0[5] = {FLAG, A, C_RR0, A ^ C_RR0, FLAG};
 
-static char RR1[5] = {FLAG, A, C_RR1, A ^  C_RR1, FLAG};
+static char RR1[5] = {FLAG, A, C_RR1, A ^ C_RR1, FLAG};
 
-static char REJ[5] = {FLAG, A, C_REJ, A ^  C_REJ, FLAG};
+static char REJ[5] = {FLAG, A, C_REJ, A ^ C_REJ, FLAG};
 
 void atender();
 
@@ -79,7 +78,8 @@ int llread(int fd, unsigned char *buffer);
 
 int readingFrame(int fd, unsigned char *frame);
 
-int processingDataFrame(unsigned char *frame, FileInfo *file, int fp, int sizeAfterDestuffing);
+int processingDataFrame(unsigned char *frame, FileInfo *file, int fp,
+                        int sizeAfterDestuffing);
 
 int stuffingFrame(unsigned char *frame, int frameSize);
 
@@ -87,6 +87,6 @@ int shiftFrame(unsigned char *frame, int i, int frameSize, int shiftDirection);
 
 int destuffingFrame(unsigned char *frame);
 
-unsigned char getBCC2(unsigned char * frame, unsigned int length);
+unsigned char getBCC2(unsigned char *frame, unsigned int length);
 
 #endif

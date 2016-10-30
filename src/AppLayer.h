@@ -32,6 +32,7 @@ int llopen(char *SerialPort, enum Functionality functionality);
 
 int sendControlPackage(int state, FileInfo file, unsigned char *controlPacket);
 
-int sendDataPackage(unsigned char *dataPacket, FILE *fp, int sequenceNumber, int *length);
+int sendDataPackage(unsigned char *dataPacket, FILE *fp, int sequenceNumber,
+                    int *length);
 
 #endif

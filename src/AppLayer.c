@@ -12,6 +12,7 @@
 #include "AppLayer.h"
 #include "Utilities.h"
 
+
 int appLayer(char *SerialPort, enum Functionality func) {
 
   if (openSerialPort(SerialPort) == -1) {
@@ -36,8 +37,8 @@ int appLayer(char *SerialPort, enum Functionality func) {
 
 int sendData() {
 
-	char sequenceNumber = NUMBER_OF_SEQUENCE_0;
-	int dataCounter=1;
+  char sequenceNumber = NUMBER_OF_SEQUENCE_0;
+  int dataCounter = 1;
   FileInfo file;
   getFile(file.filename);
   FILE *fp;
@@ -47,7 +48,7 @@ int sendData() {
     return -1;
   }
   printf("opened file %s\n", file.filename);
-	(void)signal(SIGALRM, retry);
+  (void)signal(SIGALRM, retry);
   // Determine file size
   file.size = fileSize(fp);
   printf("File size : %d\n", file.size);
@@ -62,35 +63,36 @@ int sendData() {
   int controlPacketSize =
       sendControlPackage(START_CTRL_PACKET, file, controlPacket);
 
-	controlPacket[controlPacketSize] = sequenceNumber;
-	controlPacketSize++;
+  controlPacket[controlPacketSize] = sequenceNumber;
+  controlPacketSize++;
 
   llwrite(fd, controlPacket, controlPacketSize);
 
   int dataPacketSize;
   unsigned char dataPacket[DATA_SIZE + 4];
-  int ret=1;
+  int ret = 1;
 
   while (ret != 0) {
     ret = sendDataPackage(dataPacket, fp, dataCounter, &dataPacketSize);
 
-	if(dataCounter<255)
-		dataCounter++;
-	else dataCounter=1;
-    if(ret != 0){
-		dataPacket[dataPacketSize] = sequenceNumber;
-		dataPacketSize++;
-      	llwrite(fd, dataPacket, dataPacketSize);
-		if(sequenceNumber == NUMBER_OF_SEQUENCE_0)
-			sequenceNumber=NUMBER_OF_SEQUENCE_1;
-		else sequenceNumber=NUMBER_OF_SEQUENCE_0;
-
+    if (dataCounter < 255)
+      dataCounter++;
+    else
+      dataCounter = 1;
+    if (ret != 0) {
+      dataPacket[dataPacketSize] = sequenceNumber;
+      dataPacketSize++;
+      llwrite(fd, dataPacket, dataPacketSize);
+      if (sequenceNumber == NUMBER_OF_SEQUENCE_0)
+        sequenceNumber = NUMBER_OF_SEQUENCE_1;
+      else
+        sequenceNumber = NUMBER_OF_SEQUENCE_0;
     }
   }
 
   controlPacketSize = sendControlPackage(END_CTRL_PACKET, file, controlPacket);
-	controlPacket[controlPacketSize] = sequenceNumber;
-	controlPacketSize++;
+  controlPacket[controlPacketSize] = sequenceNumber;
+  controlPacketSize++;
 
   llwrite(fd, controlPacket, controlPacketSize);
 
@@ -139,9 +141,8 @@ int sendControlPackage(int state, FileInfo file, unsigned char *controlPacket) {
   return controlPacketSize;
 }
 
-
-
-int sendDataPackage(unsigned char *dataPacket, FILE *fp, int sequenceNumber, int *length) {
+int sendDataPackage(unsigned char *dataPacket, FILE *fp, int sequenceNumber,
+                    int *length) {
 
   unsigned char buffer[DATA_SIZE];
   int ret;
