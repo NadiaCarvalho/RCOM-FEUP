@@ -373,8 +373,10 @@ int processingDataFrame(unsigned char *frame, FileInfo *file, int fp,
     return -1;
   }
 
+
+  ret = processingDataPacket(frame,sizeAfterDestuffing,file, fp, &previousDataCounter);
   // Testing to see if is a control packet
-  if (frame[frameIndex] == START_CTRL_PACKET ||
+/*  if (frame[frameIndex] == START_CTRL_PACKET ||
       frame[frameIndex] == END_CTRL_PACKET) {
     ret = frame[frameIndex];
     frameIndex += 2;
@@ -435,7 +437,7 @@ int processingDataFrame(unsigned char *frame, FileInfo *file, int fp,
       if (dataCounterCheck == 0)
         write(fp, &frame[frameIndex + i], 1);
     }
-  }
+  }*/
 
   return ret;
 }

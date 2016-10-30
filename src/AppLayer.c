@@ -108,6 +108,81 @@ int receiveData() {
   return 1;
 }
 
+int processingDataPacket(unsigned char *packet, int length, FileInfo *file, int fp, unsigned char *previousDataCounter){
+
+  int index = 4;
+  int numberOfBytes;
+  int ret;
+  int dataCounterCheck = 0;
+
+  // Testing to see if is a control packet
+  if (packet[index] == START_CTRL_PACKET ||
+      packet[index] == END_CTRL_PACKET) {
+    ret = packet[index];
+    index += 2;
+
+    numberOfBytes = packet[index];
+    index++; // taking packet index to de begginning of the data
+    memcpy(&((*file).size), packet + index, numberOfBytes);
+
+    index += numberOfBytes + 1;
+
+    numberOfBytes = packet[index];
+    index++;
+    memcpy(&((*file).filename), packet + index, numberOfBytes);
+
+    index += numberOfBytes;
+
+    if (ret == START_CTRL_PACKET) {
+      printf("\nFile name : %s\n", file->filename);
+      printf("\nFile size : %d\n", file->size);
+    }
+  }
+  else if (packet[index] == DATA_CTRL_PACKET) {
+
+    ret = packet[index];
+    index++;
+    int counterIndex = index;
+    index++;
+
+
+    unsigned int l2 = packet[index];
+    index++;
+    unsigned int l1 = packet[index];
+    index++;
+    unsigned int k = 256 * l2 + l1;
+    if (packet[8 + k] != getBCC2(packet + 4, k + 4)) {
+      printf("BCC received: %X\n", packet[8 + k]);
+      printf("BCC expected: %X\n", getBCC2(packet + 4, k + 4));
+      return -1;
+    }
+
+    if (k != (length - 10)) {
+      printf("ERRO\n");
+      return -1;
+    }
+
+    if (*previousDataCounter == 0) {
+      *previousDataCounter = packet[counterIndex];
+    } else {
+      if (*previousDataCounter == packet[counterIndex]) {
+        dataCounterCheck = 1;
+        printf("Repeated packet\n");
+      } else {
+        *previousDataCounter = packet[counterIndex];
+        dataCounterCheck = 0;
+      }
+    }
+    int i;
+    for (i = 0; i < k; i++) {
+      if (dataCounterCheck == 0)
+        write(fp, &packet[index + i], 1);
+    }
+  }
+
+  return ret;
+}
+
 int sendControlPackage(int state, FileInfo file, unsigned char *controlPacket) {
 
   // TODO: refracting repeated code
