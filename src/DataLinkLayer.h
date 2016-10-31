@@ -22,6 +22,7 @@
 #define A 0x03
 #define C_SET 0x03
 #define C_UA 0x07
+#define C_DISC 0x0B
 #define FILE_SIZE 0
 #define FILE_NAME 1
 #define NUMBER_OF_SEQUENCE_0 0x00
@@ -55,6 +56,8 @@ static char RR0[5] = {FLAG, A, C_RR0, A ^ C_RR0, FLAG};
 static char RR1[5] = {FLAG, A, C_RR1, A ^ C_RR1, FLAG};
 
 static char REJ[5] = {FLAG, A, C_REJ, A ^ C_REJ, FLAG};
+
+static char DISC[5] = {FLAG, A, C_DISC, A ^ C_DISC, FLAG};
 
 void atender();
 

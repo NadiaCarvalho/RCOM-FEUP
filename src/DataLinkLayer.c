@@ -159,6 +159,8 @@ int readingArray(int fd, char compareTo[]) {
         state = START;
     }
   }
+
+  return -1;
 }
 
 int llopenTransmiter(char *SerialPort) {
@@ -348,11 +350,7 @@ int readingFrame(int fd, unsigned char *frame) {
 
 int processingDataFrame(unsigned char *frame, FileInfo *file, int fp,
                         int sizeAfterDestuffing) {
-  int frameIndex = 4; // Where the packet starts
-  int i;
-  int numberOfBytes;
   int ret = 1;
-  int dataCounterCheck = 0;
 
   if (frame[0] != FLAG) {
     return -1;
@@ -514,4 +512,49 @@ unsigned char getBCC2(unsigned char *frame, unsigned int length) {
   }
 
   return BCC;
+}
+
+int llclose(int fd, enum Functionality func){
+  int res;
+
+  printf("\nDisconnecting......\n");
+  (void)signal(SIGALRM, atende); // instala  rotina que atende interrupcao
+
+  if(func == TRANSMITER){
+    res = write(fd, DISC, 5);
+    if(res != 5){
+      printf("Error does not write all bytes when sending frame disconnect\n");
+      exit(-1);
+    }
+
+    alarm(3);
+    if(readingArray(fd, DISC)){
+      alarm(0);
+    }
+
+    res = write(fd, UA, 5);
+    if(res != 5){
+      printf("Error does not write all bytes when sending frame disconnect\n");
+      exit(-1);
+    }
+
+  } else {
+    alarm(3);
+    if(readingArray(fd, DISC)){
+      alarm(0);
+    }
+
+    res = write(fd, DISC, 5);
+    if(res != 5){
+      printf("Error does not write all bytes when sending frame disconnect\n");
+      exit(-1);
+    }
+
+    alarm(3);
+    if(readingArray(fd, UA  )){
+      alarm(0);
+    }
+  }
+
+  return 0;
 }
