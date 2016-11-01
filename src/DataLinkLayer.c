@@ -16,6 +16,7 @@ unsigned char frame[255];
 char temp[5];
 int frameSize = 0;
 int numberOfTries = 3;
+int timeoutTime = 3;
 
 void atende() {
   if (!success) {
@@ -26,7 +27,7 @@ void atende() {
      }
 
     printf("alarme # %d\n", tries+1);
-    alarm(3);
+    alarm(timeoutTime);
     // send SET
     printf("SENDER: sending SET\n");
     write(fd, SET, 5);
@@ -35,7 +36,7 @@ void atende() {
 }
 
 void retry() {
-  alarm(3);
+  alarm(timeoutTime);
   write(fd, frame, frameSize);
 
   if (triesPackets == numberOfTries) {
@@ -178,9 +179,9 @@ int llopenTransmiter(char *SerialPort) {
 
   strcpy(buf, "");
 
-  alarm(3);
+  alarm(timeoutTime);
   if (readingArray(fd, UA)) {
-    alarm(0);
+    alarm(timeoutTime);
   }
 
   printf("\nComunication established.\n");
@@ -191,13 +192,12 @@ int llopenReceiver(char *SerialPort) {
   char buf[255];
 
   strcpy(buf, "");
-  printf("\nRECEIVER: reading SET\n");
+  printf("RECEIVER: reading SET\n");
   readingArray(fd, SET);
 
-  printf("\nRECEIVER: sending UA\n");
+  printf("RECEIVER: sending UA\n");
   write(fd, UA, 5);
 
-  printf("Sent UA frame.");
   return 0;
 }
 
@@ -224,10 +224,10 @@ int llwrite(int fd, unsigned char *buffer, int length) {
   frameSize = stuffingFrame(frame, length + 6);
 
   do {
-    alarm(3);
+    alarm(timeoutTime);
     write(fd, frame, frameSize);
     read(fd, temp, 5);
-    alarm(0);
+    alarm(timeoutTime);
   } while (temp[2] == C_REJ);
 
   return 1;
@@ -263,9 +263,9 @@ int readingFrame(int fd, unsigned char *frame) {
   (void)signal(SIGALRM, timeout);
 
   while (!over) {
-    alarm(20);
+    alarm(timeoutTime);
     read(fd, &oneByte, 1);
-    alarm(0);
+    alarm(timeoutTime);
 
     switch (state) {
     case START:
@@ -495,9 +495,9 @@ int llclose(int fd, enum Functionality func){
       exit(-1);
     }
 
-    alarm(3);
+    alarm(timeoutTime);
     if(readingArray(fd, DISC)){
-      alarm(0);
+      alarm(timeoutTime);
       tries = 0; success = 0;
     }
 
@@ -508,9 +508,9 @@ int llclose(int fd, enum Functionality func){
     }
 
   } else {
-    alarm(3);
+    alarm(timeoutTime);
     if(readingArray(fd, DISC)){
-      alarm(0);
+      alarm(timeoutTime);
       tries = 0; success = 0;
     }
 
@@ -520,9 +520,9 @@ int llclose(int fd, enum Functionality func){
       exit(-1);
     }
 
-    alarm(3);
+    alarm(timeoutTime);
     if(readingArray(fd, UA)){
-      alarm(0);
+      alarm(timeoutTime);
       tries = 0; success = 0;
     }
   }
@@ -544,7 +544,22 @@ void askNumberOfTries(){
 
   while(ret == 0){
     ret = scanf("%d", &numberOfTries);
-    printf("ret : %d\n", ret);
+
+    if(ret == 0){
+      printf("Please write a valid number\n");
+      clean_stdin();
+    }
+  }
+}
+
+void askTimeOfTimeout(){
+  int ret = 0;
+
+  printf("Timeout time : ");
+
+  while(ret == 0){
+    ret = scanf("%d", &timeoutTime);
+
     if(ret == 0){
       printf("Please write a valid number\n");
       clean_stdin();

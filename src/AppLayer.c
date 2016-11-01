@@ -30,6 +30,8 @@ int appLayer(char *SerialPort, enum Functionality func) {
     askNumberOfTries();
   }
 
+  askTimeOfTimeout();
+
   llopen(SerialPort, func);
 
   if (func == TRANSMITER) {
@@ -167,11 +169,11 @@ int receiveData() {
         write(fd, RR0, 5);
     }
   }
+
+    printf("File read\n");
   printf("\npackages lost : %d\n", packagesLost);
   printf("Total bytes read : %d\n", bytesRead);
   printf("FIle size : %d\n", file.size);
-  printf("\nFile read\n");
-
 
   return 1;
 }
@@ -203,8 +205,8 @@ int processingDataPacket(unsigned char *packet, int length, FileInfo *file, int 
     index += numberOfBytes;
 
     if (ret == START_CTRL_PACKET) {
-      printf("\nFile name : %s\n", file->filename);
-      printf("\nFile size : %d\n\n", file->size);
+      printf("File name : %s\n", file->filename);
+      printf("File size : %d\n\n", file->size);
     }
   }
   else if (packet[index] == DATA_CTRL_PACKET) {

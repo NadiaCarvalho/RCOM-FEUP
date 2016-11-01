@@ -95,6 +95,10 @@ unsigned char getBCC2(unsigned char *frame, unsigned int length);
 
 void askNumberOfTries();
 
+void askTimeOfTimeout();
+
+void askTimeOfTimeout();
+
 int clean_stdin();
 
 #endif
