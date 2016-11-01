@@ -18,18 +18,21 @@ int frameSize = 0;
 int numberOfTries = 3;
 
 void atende() {
-  tries++;
   if (!success) {
-    if (tries <= 3) {
-      printf("alarme # %d\n", tries);
+
+    if (tries == numberOfTries) {
+       printf("TIMEOUT : UA not acknowledge\n");
+       exit(1);
+     }
+
+    if (tries < 3) {
+      printf("alarme # %d\n", tries+1);
       alarm(3);
       // send SET
       printf("SENDER: sending SET\n");
       write(fd, SET, 5);
-    } else if (tries == 4) {
-      printf("TIMEOUT : UA not acknowledge");
-      exit(1);
     }
+    tries++;
   }
 }
 
