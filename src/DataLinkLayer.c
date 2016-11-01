@@ -526,6 +526,22 @@ int llclose(int fd, enum Functionality func){
 
 int askNumberOfTries(){
 
+  int ret = 0;
+
   printf("Max number of retransmissions : ");
-  scanf("%d", &numberOfTries);
+
+  while(ret == 0){
+    ret = scanf("%d", &numberOfTries);
+    printf("ret : %d\n", ret);
+    if(ret == 0){
+      printf("Please write a valid number\n");
+      clean_stdin();
+    }
+  }
+}
+
+int clean_stdin()
+{
+    while (getchar()!='\n');
+    return 1;
 }
