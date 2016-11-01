@@ -77,13 +77,13 @@ int llopenReceiver(char *SerialPort);
 
 int llwrite(int fd, unsigned char *buffer, int length);
 
-int llread(int fd, unsigned char *buffer);
+int llread(int fd, unsigned char *frame);
 
 int llclose(int fd, enum Functionality func);
 
 int readingFrame(int fd, unsigned char *frame);
 
-int processingDataFrame(unsigned char *frame, FileInfo *file, int fp, int sizeAfterDestuffing);
+int processingDataFrame(unsigned char *frame);
 
 int stuffingFrame(unsigned char *frame, int frameSize);
 

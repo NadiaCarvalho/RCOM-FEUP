@@ -12,6 +12,8 @@
 #include "AppLayer.h"
 #include "Utilities.h"
 
+unsigned char previousDataCounter = 0;
+
 
 int appLayer(char *SerialPort, enum Functionality func) {
 
@@ -106,12 +108,74 @@ int sendData() {
 
 int receiveData() {
   unsigned char buffer[255];
-  llread(fd, buffer);
+
+  unsigned char frame[255];
+  int over = 0;
+  FileInfo file;
+  file.size = 0;
+  int ret;
+  int fp;
+  int bytesRead = 0;
+  int percentage = 0;
+  int packagesLost = 0;
+  int percentageWrite = 0;
+  int frameLength;
+
+  printf("\nStart reading\n");
+
+  while (!over) {
+
+    frameLength = llread(fd, frame);
+
+    if (frameLength == -1) {
+      packagesLost++;
+      ret = -1;
+    }
+    else {
+       ret = processingDataPacket(frame, frameLength, &file, fp);
+
+       if (ret == START_CTRL_PACKET) {
+         fp = open(file.filename, O_CREAT | O_WRONLY);
+         if (fp == -1) {
+           printf("Could not open file  test.c");
+           return -1;
+         }
+       }
+
+       if (ret == DATA_CTRL_PACKET) {
+         bytesRead += frameLength - 10;
+         percentage = (bytesRead * 100) / file.size;
+         if((percentage % 10) == 0 && percentageWrite != (int)percentage){
+           printf("%d%\n", percentage);
+           percentageWrite = (int)percentage;
+         }
+
+       }
+
+       if (ret == END_CTRL_PACKET) {
+         over = 1;
+       }
+    }
+
+    if (ret == -1) {
+      write(fd, REJ, 5);
+    } else {
+      if (frame[FIELD_CONTROL] == NUMBER_OF_SEQUENCE_0) {
+        write(fd, RR1, 5);
+      } else
+        write(fd, RR0, 5);
+    }
+  }
+  printf("\npackages lost : %d\n", packagesLost);
+  printf("Total bytes read : %d\n", bytesRead);
+  printf("FIle size : %d\n", file.size);
+  printf("\nFile read\n");
+
 
   return 1;
 }
 
-int processingDataPacket(unsigned char *packet, int length, FileInfo *file, int fp, unsigned char *previousDataCounter){
+int processingDataPacket(unsigned char *packet, int length, FileInfo *file, int fp){
 
   int index = 4;
   int numberOfBytes;
@@ -121,6 +185,7 @@ int processingDataPacket(unsigned char *packet, int length, FileInfo *file, int 
   // Testing to see if is a control packet
   if (packet[index] == START_CTRL_PACKET ||
       packet[index] == END_CTRL_PACKET) {
+
     ret = packet[index];
     index += 2;
 
@@ -148,7 +213,6 @@ int processingDataPacket(unsigned char *packet, int length, FileInfo *file, int 
     int counterIndex = index;
     index++;
 
-
     unsigned int l2 = packet[index];
     index++;
     unsigned int l1 = packet[index];
@@ -165,17 +229,18 @@ int processingDataPacket(unsigned char *packet, int length, FileInfo *file, int 
       return -1;
     }
 
-    if (*previousDataCounter == 0) {
-      *previousDataCounter = packet[counterIndex];
+    if (previousDataCounter == 0) {
+      previousDataCounter = packet[counterIndex];
     } else {
-      if (*previousDataCounter == packet[counterIndex]) {
+      if (previousDataCounter == packet[counterIndex]) {
         dataCounterCheck = 1;
         printf("Repeated packet\n");
       } else {
-        *previousDataCounter = packet[counterIndex];
+        previousDataCounter = packet[counterIndex];
         dataCounterCheck = 0;
       }
     }
+
     int i;
     for (i = 0; i < k; i++) {
       if (dataCounterCheck == 0)

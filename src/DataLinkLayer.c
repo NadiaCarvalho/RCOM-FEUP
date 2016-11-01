@@ -15,7 +15,6 @@ int flag = 1, tries = 0, success = 0, fail = 0, triesPackets = 0;
 unsigned char frame[255];
 char temp[5];
 int frameSize = 0;
-unsigned char previousDataCounter = 0;
 int numberOfTries = 3;
 
 void atende() {
@@ -228,73 +227,24 @@ int llwrite(int fd, unsigned char *buffer, int length) {
   return 1;
 }
 
-int llread(int fd, unsigned char *buffer) {
-  int sizeAfterDestuffing = 0;
-  unsigned char frame[255];
-  int over = 0;
-  FileInfo file;
-  file.size = 0;
-  int ret;
-  int fp;
-  int bytesRead = 0;
-  int percentage = 0;
-  int packagesLost = 0;
-  int percentageWrite = 0;
+int llread(int fd, unsigned char *frame) {
+  int ret, sizeAfterDestuffing;
 
-  printf("\nStart reading\n");
+  readingFrame(fd, frame);
 
-  while (!over) {
+ sizeAfterDestuffing = destuffingFrame(frame);
 
-    readingFrame(fd, frame);
-
-    sizeAfterDestuffing = destuffingFrame(frame);
-
-    // Processing frame
-    if (frame[FIELD_CONTROL] == NUMBER_OF_SEQUENCE_0 ||
-        frame[FIELD_CONTROL] == NUMBER_OF_SEQUENCE_1) {
-      ret = processingDataFrame(frame, &file, fp, sizeAfterDestuffing);
-    }
-
-    if (ret == -1) {
-      packagesLost++;
-    }
-
-    if (ret == START_CTRL_PACKET) {
-      fp = open(file.filename, O_CREAT | O_WRONLY);
-      if (fp == -1) {
-        printf("Could not open file  test.c");
-        return -1;
-      }
-    }
-
-    if (ret == DATA_CTRL_PACKET) {
-      bytesRead += sizeAfterDestuffing - 10;
-      percentage = (bytesRead * 100) / file.size;
-      if((percentage % 10) == 0 && percentageWrite != (int)percentage){
-        printf("%d%\n", percentage);
-        percentageWrite = (int)percentage;
-      }
-        //printf("|||");
-    }
-
-    if (ret == END_CTRL_PACKET) {
-      over = 1;
-    }
-    if (ret == -1) {
-      write(fd, REJ, 5);
-    } else {
-      if (frame[FIELD_CONTROL] == NUMBER_OF_SEQUENCE_0) {
-        write(fd, RR1, 5);
-      } else
-        write(fd, RR0, 5);
-    }
+  // Processing frame
+  if (frame[FIELD_CONTROL] == NUMBER_OF_SEQUENCE_0 ||
+      frame[FIELD_CONTROL] == NUMBER_OF_SEQUENCE_1) {
+    ret = processingDataFrame(frame);
   }
-  printf("\npackages lost : %d\n", packagesLost);
-  printf("Total bytes read : %d\n", bytesRead);
-  printf("FIle size : %d\n", file.size);
-  printf("\nFile read\n");
 
-  return 1;
+  if(ret == 0){
+    ret = sizeAfterDestuffing;
+  }
+
+  return ret;
 }
 
 
@@ -355,9 +305,8 @@ int readingFrame(int fd, unsigned char *frame) {
   return i; // returning the size of the frame
 }
 
-int processingDataFrame(unsigned char *frame, FileInfo *file, int fp,
-                        int sizeAfterDestuffing) {
-  int ret = 1;
+int processingDataFrame(unsigned char *frame) {
+  int ret = 0;
 
   if (frame[0] != FLAG) {
     return -1;
@@ -379,7 +328,7 @@ int processingDataFrame(unsigned char *frame, FileInfo *file, int fp,
   }
 
 
-  ret = processingDataPacket(frame,sizeAfterDestuffing,file, fp, &previousDataCounter);
+  //ret = processingDataPacket(frame,sizeAfterDestuffing,file, fp, &previousDataCounter);
   // Testing to see if is a control packet
 /*  if (frame[frameIndex] == START_CTRL_PACKET ||
       frame[frameIndex] == END_CTRL_PACKET) {
@@ -573,7 +522,7 @@ int llclose(int fd, enum Functionality func){
 }
 
 int askNumberOfTries(){
-  
+
   printf("Max number of retransmissions : ");
   scanf("%d", &numberOfTries);
 }
