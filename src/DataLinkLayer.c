@@ -228,6 +228,16 @@ int llwrite(int fd, unsigned char *buffer, int length) {
   return 1;
 }
 
+int readingReceiverAnswer(int fd){
+  ReadingArrayState state;
+  unsigned char byte;
+
+  while(1){
+    read(fd, byte, 1);
+
+  }
+}
+
 int llread(int fd, unsigned char *buffer) {
   int sizeAfterDestuffing = 0;
   unsigned char frame[255];
