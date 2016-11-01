@@ -524,7 +524,7 @@ int llclose(int fd, enum Functionality func){
   return 0;
 }
 
-int askNumberOfTries(){
+void askNumberOfTries(){
 
   int ret = 0;
 

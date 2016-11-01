@@ -110,8 +110,6 @@ int sendData() {
 }
 
 int receiveData() {
-  unsigned char buffer[255];
-
   unsigned char frame[255];
   int over = 0;
   FileInfo file;
@@ -149,7 +147,7 @@ int receiveData() {
          bytesRead += frameLength - 10;
          percentage = (bytesRead * 100) / file.size;
          if((percentage % 10) == 0 && percentageWrite != (int)percentage){
-           printf("%d%\n", percentage);
+           printf("%d%%\n", percentage);
            percentageWrite = (int)percentage;
          }
 

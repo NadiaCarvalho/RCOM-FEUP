@@ -93,4 +93,8 @@ int destuffingFrame(unsigned char *frame);
 
 unsigned char getBCC2(unsigned char *frame, unsigned int length);
 
+void askNumberOfTries();
+
+int clean_stdin();
+
 #endif
