@@ -25,13 +25,11 @@ void atende() {
        exit(1);
      }
 
-    if (tries < 3) {
-      printf("alarme # %d\n", tries+1);
-      alarm(3);
-      // send SET
-      printf("SENDER: sending SET\n");
-      write(fd, SET, 5);
-    }
+    printf("alarme # %d\n", tries+1);
+    alarm(3);
+    // send SET
+    printf("SENDER: sending SET\n");
+    write(fd, SET, 5);
     tries++;
   }
 }
@@ -486,9 +484,11 @@ int llclose(int fd, enum Functionality func){
   int res;
 
   printf("\nDisconnecting......\n");
+  tries = 0; success = 0;
   (void)signal(SIGALRM, atende); // instala  rotina que atende interrupcao
 
   if(func == TRANSMITER){
+
     res = write(fd, DISC, 5);
     if(res != 5){
       printf("Error does not write all bytes when sending frame disconnect\n");
@@ -498,6 +498,7 @@ int llclose(int fd, enum Functionality func){
     alarm(3);
     if(readingArray(fd, DISC)){
       alarm(0);
+      tries = 0; success = 0;
     }
 
     res = write(fd, UA, 5);
@@ -510,6 +511,7 @@ int llclose(int fd, enum Functionality func){
     alarm(3);
     if(readingArray(fd, DISC)){
       alarm(0);
+      tries = 0; success = 0;
     }
 
     res = write(fd, DISC, 5);
@@ -519,8 +521,9 @@ int llclose(int fd, enum Functionality func){
     }
 
     alarm(3);
-    if(readingArray(fd, UA  )){
+    if(readingArray(fd, UA)){
       alarm(0);
+      tries = 0; success = 0;
     }
   }
 
