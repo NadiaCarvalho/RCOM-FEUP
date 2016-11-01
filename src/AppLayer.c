@@ -28,11 +28,11 @@ int appLayer(char *SerialPort, enum Functionality func) {
 
   if (func == TRANSMITER) {
     sendData();
-    llclose(fd, func);
   } else {
     receiveData();
-    llclose(fd, func);
   }
+
+  llclose(fd, func);
 
   return 1;
 }

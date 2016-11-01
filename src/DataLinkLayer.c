@@ -556,5 +556,7 @@ int llclose(int fd, enum Functionality func){
     }
   }
 
+  printf("\nAll done, ending program\n");
+
   return 0;
 }
