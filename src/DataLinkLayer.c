@@ -51,6 +51,11 @@ void retry() {
   printf("\n\nTrying to connect to receiver\nTry number : %d\n\n", triesPackets);
 }
 
+void timeout(){
+  printf("TIMEOUT : Connection lost, try again later\n");
+  exit(1);
+}
+
 ReadingArrayState nextState(ReadingArrayState state) {
   switch (state) {
   case START:
@@ -257,8 +262,12 @@ int readingFrame(int fd, unsigned char *frame) {
   int over = 0;
   int i = 0;
 
+  (void)signal(SIGALRM, timeout);
+
   while (!over) {
+    alarm(20);
     read(fd, &oneByte, 1);
+    alarm(0);
 
     switch (state) {
     case START:
