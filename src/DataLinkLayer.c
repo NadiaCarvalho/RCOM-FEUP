@@ -221,7 +221,8 @@ int llwrite(int fd, unsigned char *buffer, int length) {
   do {
     alarm(3);
     write(fd, frame, frameSize);
-    read(fd, temp, 5);
+    readingReceiverAnswer(fd);
+  //  read(fd, temp, 5);
     alarm(0);
   } while (temp[2] == C_REJ);
 
@@ -229,13 +230,53 @@ int llwrite(int fd, unsigned char *buffer, int length) {
 }
 
 int readingReceiverAnswer(int fd){
-  ReadingArrayState state;
-  unsigned char byte;
+  ReadingArrayState state = START;
+  unsigned char lendo;
+  int i = 0;
 
-  while(1){
-    read(fd, byte, 1);
-
+  while(i != 5){
+    read(fd, temp+i, 1);
+    //temp[i] = lendo;
+    i++;
+    printf("ENTREI\n");
+  /*  if(state == START && byte == FLAG){
+      state = nextState(state);
+      temp[i] = byte;
+      i++;
+    }
+    else if(state == FLAG && byte == A){
+      state = nextState(state);
+      temp[i] = byte;
+      i++;
+    }
+    else if(state == A_STATE){
+      state = nextState(state);
+      temp[i] = byte;
+      i++;
+    }
+    else if(state == C_STATE){
+      state = nextState(state);
+      temp[i] = byte;
+      i++;
+    }
+    else if(state == BCC && byte == FLAG){
+      temp[i] = byte;
+      i++;
+      break;
+    }
+    else if(byte == FLAG){
+      state = FLAG;
+      i = 0;
+      temp[i] = byte;
+      i++;
+    }
+    else {
+      state = START;
+      i = 0;
+    }*/
   }
+
+  return 1;
 }
 
 int llread(int fd, unsigned char *buffer) {
@@ -527,6 +568,7 @@ unsigned char getBCC2(unsigned char *frame, unsigned int length) {
 int llclose(int fd, enum Functionality func){
   int res;
 
+  tries = 0;success = 0;
   printf("\nDisconnecting......\n");
   (void)signal(SIGALRM, atende); // instala  rotina que atende interrupcao
 
@@ -537,10 +579,14 @@ int llclose(int fd, enum Functionality func){
       exit(-1);
     }
 
+    printf("PASSEI O PRIMEIRO WRITE\n");
+
     alarm(3);
     if(readingArray(fd, DISC)){
       alarm(0);
     }
+
+    printf("PASSEI O PRIMEIRO READ\n");
 
     res = write(fd, UA, 5);
     if(res != 5){
@@ -548,11 +594,15 @@ int llclose(int fd, enum Functionality func){
       exit(-1);
     }
 
+    printf("ACABEI\n");
+
   } else {
     alarm(3);
     if(readingArray(fd, DISC)){
       alarm(0);
     }
+
+    printf("PASSEI O PRIMEIRO READ\n");
 
     res = write(fd, DISC, 5);
     if(res != 5){
@@ -560,8 +610,10 @@ int llclose(int fd, enum Functionality func){
       exit(-1);
     }
 
+    printf("ESCREVI\n");
+
     alarm(3);
-    if(readingArray(fd, UA  )){
+    if(readingArray(fd, UA)){
       alarm(0);
     }
   }
