@@ -27,6 +27,7 @@ int appLayer(char *SerialPort, enum Functionality func) {
   llopen(SerialPort, func);
 
   if (func == TRANSMITER) {
+    askNumberOfTries();
     sendData();
   } else {
     receiveData();

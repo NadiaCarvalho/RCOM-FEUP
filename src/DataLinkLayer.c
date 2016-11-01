@@ -16,7 +16,7 @@ unsigned char frame[255];
 char temp[5];
 int frameSize = 0;
 unsigned char previousDataCounter = 0;
-const int NUMBER_OF_TRIES = 3;
+int numberOfTries = 3;
 
 void atende() {
   tries++;
@@ -38,10 +38,10 @@ void retry() {
   alarm(3);
   write(fd, frame, frameSize);
 
-  if (triesPackets == NUMBER_OF_TRIES) {
+  if (triesPackets == numberOfTries) {
     printf(
         "\n\nTIMEOUT : Lost connection to receiver\n Number of tries : %d\n\n",
-        NUMBER_OF_TRIES);
+        numberOfTries);
     exit(1);
   }
 
@@ -570,4 +570,10 @@ int llclose(int fd, enum Functionality func){
   else printf("----Receiver---- \n\n");
 
   return 0;
+}
+
+int askNumberOfTries(){
+  
+  printf("Max number of retransmissions : ");
+  scanf("%d", &numberOfTries);
 }
