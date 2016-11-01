@@ -239,6 +239,7 @@ int llread(int fd, unsigned char *buffer) {
   int bytesRead = 0;
   int percentage = 0;
   int packagesLost = 0;
+  int percentageWrite = 0;
 
   printf("\nStart reading\n");
 
@@ -269,7 +270,11 @@ int llread(int fd, unsigned char *buffer) {
     if (ret == DATA_CTRL_PACKET) {
       bytesRead += sizeAfterDestuffing - 10;
       percentage = (bytesRead * 100) / file.size;
-      printf("Percentage : %d\n", percentage);
+      if((percentage % 10) == 0 && percentageWrite != (int)percentage){
+        printf("%d%\n", percentage);
+        percentageWrite = (int)percentage;
+      }
+        //printf("|||");
     }
 
     if (ret == END_CTRL_PACKET) {
@@ -284,7 +289,9 @@ int llread(int fd, unsigned char *buffer) {
         write(fd, RR0, 5);
     }
   }
-
+  printf("\npackages lost : %d\n", packagesLost);
+  printf("Total bytes read : %d\n", bytesRead);
+  printf("FIle size : %d\n", file.size);
   printf("\nFile read\n");
 
   return 1;
@@ -556,7 +563,11 @@ int llclose(int fd, enum Functionality func){
     }
   }
 
-  printf("\nAll done, ending program\n");
+  printf("\nAll done, ending program\n\n");
+  if(func == TRANSMITER){
+    printf("----SENDER----\n\n");
+  }
+  else printf("----Receiver---- \n\n");
 
   return 0;
 }

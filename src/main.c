@@ -24,11 +24,11 @@ int main(int argc, char **argv) {
   }
 
   if ((strcmp("0", argv[1]) == 0)) {
-    printf("----SENDER----\n");
+    printf("\n----SENDER----\n\n");
     func = TRANSMITER;
     appLayer(serialPort, func);
   } else if ((strcmp("1", argv[1]) == 0)) {
-    printf("----Receiver---- \n");
+    printf("\n----Receiver---- \n\n");
     func = RECEIVER;
     appLayer(serialPort, func);
   }

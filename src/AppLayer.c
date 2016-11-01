@@ -137,7 +137,7 @@ int processingDataPacket(unsigned char *packet, int length, FileInfo *file, int 
 
     if (ret == START_CTRL_PACKET) {
       printf("\nFile name : %s\n", file->filename);
-      printf("\nFile size : %d\n", file->size);
+      printf("\nFile size : %d\n\n", file->size);
     }
   }
   else if (packet[index] == DATA_CTRL_PACKET) {
