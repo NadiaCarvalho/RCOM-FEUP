@@ -170,7 +170,7 @@ int receiveData() {
     }
   }
 
-    printf("File read\n");
+  printf("\nFile read\n");
   printf("\npackages lost : %d\n", packagesLost);
   printf("Total bytes read : %d\n", bytesRead);
   printf("FIle size : %d\n", file.size);

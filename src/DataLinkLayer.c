@@ -190,10 +190,14 @@ int llopenTransmiter(char *SerialPort) {
 
 int llopenReceiver(char *SerialPort) {
   char buf[255];
+  (void)signal(SIGALRM, timeout);
 
   strcpy(buf, "");
   printf("RECEIVER: reading SET\n");
+
+  alarm(timeoutTime);
   readingArray(fd, SET);
+  alarm(0);
 
   printf("RECEIVER: sending UA\n");
   write(fd, UA, 5);
