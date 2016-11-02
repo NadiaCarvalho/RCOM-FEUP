@@ -17,6 +17,7 @@ char temp[5];
 int frameSize = 0;
 int numberOfTries = 3;
 int timeoutTime = 3;
+int numberOfTimeOuts = 0;
 
 void atende() {
   if (!success) {
@@ -32,12 +33,14 @@ void atende() {
     printf("SENDER: sending SET\n");
     write(fd, SET, 5);
     tries++;
+    numberOfTimeOuts++;
   }
 }
 
 void retry() {
   alarm(timeoutTime);
   write(fd, frame, frameSize);
+  numberOfTimeOuts++;
 
   if (triesPackets == numberOfTries) {
     printf(
@@ -208,6 +211,8 @@ int llopenReceiver(char *SerialPort) {
 int llwrite(int fd, unsigned char *buffer, int length) {
 
   int sequenceNumber = buffer[length - 1];
+  int numberOfRejs = 0;
+
   length--;
   frame[0] = FLAG;
   frame[1] = A;
@@ -227,14 +232,20 @@ int llwrite(int fd, unsigned char *buffer, int length) {
 
   frameSize = stuffingFrame(frame, length + 6);
 
+  i = 0;
   do {
+    if(i>0){
+      numberOfRejs++;
+    }
+
     alarm(timeoutTime);
     write(fd, frame, frameSize);
     read(fd, temp, 5);
     alarm(timeoutTime);
+    i++;
   } while (temp[2] == C_REJ);
 
-  return 1;
+  return numberOfRejs;
 }
 
 int llread(int fd, unsigned char *frame) {
@@ -270,7 +281,7 @@ int readingFrame(int fd, unsigned char *frame) {
     alarm(timeoutTime);
     read(fd, &oneByte, 1);
     alarm(timeoutTime);
-    
+
     switch (state) {
     case START:
       if (oneByte == FLAG) {
@@ -486,6 +497,8 @@ unsigned char getBCC2(unsigned char *frame, unsigned int length) {
 
 int llclose(int fd, enum Functionality func){
   int res;
+
+  printf("Number of timeouts : %d\n", numberOfTimeOuts);
 
   printf("\nDisconnecting......\n");
   tries = 0; success = 0;

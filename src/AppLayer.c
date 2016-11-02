@@ -83,6 +83,8 @@ int sendData() {
   int dataPacketSize;
   unsigned char dataPacket[dataSize + 4];
   int ret = 1;
+  int numberOfRejs = 0;
+  int llwriteRet;
 
   while (ret != 0) {
     ret = sendDataPackage(dataPacket, fp, dataCounter, &dataPacketSize);
@@ -106,9 +108,12 @@ int sendData() {
   controlPacket[controlPacketSize] = sequenceNumber;
   controlPacketSize++;
 
-  llwrite(fd, controlPacket, controlPacketSize);
+  llwriteRet = llwrite(fd, controlPacket, controlPacketSize);
+  numberOfRejs += llwriteRet;
 
-  printf("\n\nFile sent\n");
+  printf("\nFile sent\n\n");
+
+  printf("Number of rejs reiceived : %d\n", numberOfRejs);
 
   return 1;
 }
@@ -124,6 +129,7 @@ int receiveData() {
   int percentage = 0;
   int packagesLost = 0;
   int percentageWrite = 0;
+  int numberOfRejs = 0;
   int frameLength;
 
   printf("\nStart reading\n");
@@ -164,6 +170,7 @@ int receiveData() {
 
     if (ret == -1) {
       write(fd, REJ, 5);
+      numberOfRejs++;
     } else {
       if (frame[FIELD_CONTROL] == NUMBER_OF_SEQUENCE_0) {
         write(fd, RR1, 5);
@@ -173,9 +180,10 @@ int receiveData() {
   }
 
   printf("\nFile read\n");
-  printf("\npackages lost : %d\n", packagesLost);
+  printf("\nPackages lost : %d\n", packagesLost);
   printf("Total bytes read : %d\n", bytesRead);
-  printf("FIle size : %d\n", file.size);
+  printf("File size : %d\n", file.size);
+  printf("Number of rejs sent : %d\n", numberOfRejs);
 
   return 1;
 }
