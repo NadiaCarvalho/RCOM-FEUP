@@ -13,7 +13,7 @@
 #include "Utilities.h"
 
 unsigned char previousDataCounter = 0;
-
+int dataSize = 100; //default value
 
 int appLayer(char *SerialPort, enum Functionality func) {
 
@@ -28,6 +28,7 @@ int appLayer(char *SerialPort, enum Functionality func) {
 
   if(func == TRANSMITER){
     askNumberOfTries();
+    dataSize = askMaxFrameSize();
   }
 
   askTimeOfTimeout();
@@ -59,6 +60,7 @@ int sendData() {
   }
   printf("opened file %s\n", file.filename);
   (void)signal(SIGALRM, retry);
+
   // Determine file size
   file.size = fileSize(fp);
   printf("File size : %d\n", file.size);
@@ -79,7 +81,7 @@ int sendData() {
   llwrite(fd, controlPacket, controlPacketSize);
 
   int dataPacketSize;
-  unsigned char dataPacket[DATA_SIZE + 4];
+  unsigned char dataPacket[dataSize + 4];
   int ret = 1;
 
   while (ret != 0) {
@@ -290,9 +292,9 @@ int sendControlPackage(int state, FileInfo file, unsigned char *controlPacket) {
 int sendDataPackage(unsigned char *dataPacket, FILE *fp, int sequenceNumber,
                     int *length) {
 
-  unsigned char buffer[DATA_SIZE];
+  unsigned char buffer[dataSize];
   int ret;
-  ret = fread(buffer, sizeof(char), DATA_SIZE, fp);
+  ret = fread(buffer, sizeof(char), dataSize, fp);
   if (ret == 0) {
     return 0;
   } else if (ret < 0) {
@@ -312,7 +314,7 @@ int sendDataPackage(unsigned char *dataPacket, FILE *fp, int sequenceNumber,
   dataPacket[3] = ret;
 
   int j;
-  for (j = 0; j < DATA_SIZE; j++) {
+  for (j = 0; j < dataSize; j++) {
     dataPacket[4 + j] = buffer[j];
   }
 

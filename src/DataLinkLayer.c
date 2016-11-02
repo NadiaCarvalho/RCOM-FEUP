@@ -270,7 +270,7 @@ int readingFrame(int fd, unsigned char *frame) {
     alarm(timeoutTime);
     read(fd, &oneByte, 1);
     alarm(timeoutTime);
-
+    
     switch (state) {
     case START:
       if (oneByte == FLAG) {
@@ -569,6 +569,24 @@ void askTimeOfTimeout(){
       clean_stdin();
     }
   }
+}
+
+int askMaxFrameSize(){
+  int ret = 0;
+  int size = 0;
+
+  printf("Max data frame size : ");
+
+  while(ret == 0){
+    ret = scanf("%d", &size);
+
+    if(ret == 0){
+      printf("Please write a valid number\n");
+      clean_stdin();
+    }
+  }
+
+  return size;
 }
 
 int clean_stdin()

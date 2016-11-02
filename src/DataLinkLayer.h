@@ -97,7 +97,7 @@ void askNumberOfTries();
 
 void askTimeOfTimeout();
 
-void askTimeOfTimeout();
+int askMaxFrameSize();
 
 int clean_stdin();
 
