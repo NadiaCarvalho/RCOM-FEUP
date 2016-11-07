@@ -18,3 +18,6 @@ Open three terminals.
 2.On the second run the ``` make ``` command to compile the project and then ``` sudo ./app 0 ``` for the sender.
 
 3.On the third run ``` sudo ./app 1 ``` for the receiver.
+
+##Screenshot
+![image](https://raw.githubusercontent.com/pedro-c/RCOM-FEUP/master/screenshot.png)
