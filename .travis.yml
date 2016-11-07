@@ -1,0 +1,3 @@
+language: C
+sudo: required
+script: cd ./src make
