@@ -1,3 +1,3 @@
 language: C
 sudo: required
-script: cd ./src make
+script: cd ./1st_Assignment/src make
