@@ -1,0 +1,6 @@
+//////////////////////
+
+1. Criar script que faz todos os if configs, tendo em conta qual dos pcs.
+2. Criar as vlans.
+3. fazer load do ficheiro que configuraçao que configura o switch (pagina 49)
+	nome:4-mj-nr-pc

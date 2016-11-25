@@ -1,0 +1,17 @@
+#!/bin/bash
+if [ "$hostname" == 'tux51']; then
+	ifconfig eth0 up
+	ifconfig eth0 172.16.50.1/24
+	ifconfig 
+fi
+if ["$hostname" == 'tux54'];then
+	ifconfig eth0 up
+	ifconfig eth0 172.16.50.254/24
+	ifconfig
+fi
+if ["$hostname" == 'tux52']; then
+	ifconfig eth0 up
+	ifconfig eth0 172.16.51.1/24
+	ifconfig
+fi
+route -n

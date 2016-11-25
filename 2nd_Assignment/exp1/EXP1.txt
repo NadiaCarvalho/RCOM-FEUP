@@ -1,0 +1,4 @@
+ARP
+MAC-> hardware address da placa de rede (único), enquanto que o Ip não.
+é o protocolo que atribui a um IP um MAC
+arp packets possuem informaçao de qual o mac address para um determinado ip e sao usados para o pc que recebe saber qual é o mac adress de um certo ip.0

@@ -1,0 +1,40 @@
+Experiência 2
+
+Pergunta 1
+
+Creating an Ethernet VLAN
+» configure terminal
+» vlan x0
+» end
+» show vlan id x0
+♦ Deleting a vlan
+» configure terminal
+» no vlan x0
+» end
+» show vlan brief
+♦ Add port 1 to vlan x0
+» configure terminal
+» interface fastethernet 0/1
+» switchport mode access
+» switchport access vlan x0
+» end
+» show running-config interface fastethernet 0/1
+» show interfaces fastethernet 0/1 switchport
+
+Pergunta 2
+
+2 redes - 2 brodcast diferentes
+255 esta guardado para o brodcast.
+
+ping brodcast - envia um ping para todos os pcs estao ligados a essa rede.
+ou seja se tuxy1 mandar um ping brodcast, apenas o tuxy4 o vai receber (estao ambos ligados a vlan0). mas o tuxy2 nao o vai receber pois esta ligado a uma rede difernte (vlany1).
+
+Por isso existem 2 dominios de broadcast, vlany0 e vlany1.
+
+
+Ponto 5. In tuxy1, ping tuxy4 and then ping tuxy2
+
+
+-configurar switch vlan e ftp
+-cliente ftp nos dois computadores
+-compilar cliente ftp -> buscar ficheiro a um servidor que o professor vai indicar
