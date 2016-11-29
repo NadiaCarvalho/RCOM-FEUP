@@ -1,15 +1,16 @@
 #!/bin/bash
-if [ "$hostname" == 'tux51']; then
+if [ "`echo $HOSTNAME|grep tux51 -c`" = "1" ]; then
 	ifconfig eth0 up
 	ifconfig eth0 172.16.50.1/24
 	ifconfig 
 fi
-if ["$hostname" == 'tux54'];then
+if [ "`echo $HOSTNAME|grep tux54 -c`" = "1" ]; then
 	ifconfig eth0 up
 	ifconfig eth0 172.16.50.254/24
+	ifconfig eth1 172.16.51.253/24
 	ifconfig
 fi
-if ["$hostname" == 'tux52']; then
+if [ "`echo $HOSTNAME|grep tux52 -c`" = "1" ]; then
 	ifconfig eth0 up
 	ifconfig eth0 172.16.51.1/24
 	ifconfig

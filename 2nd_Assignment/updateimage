@@ -1,0 +1,86 @@
+#!/bin/bash
+
+# rsync options
+#-r, --recursive             recurse into directories
+#-p, --perms                 preserve permissions
+#-o, --owner                 preserve owner (super-user only)
+#-g, --group                 preserve group
+#-l, --links                 copy symlinks as symlinks
+#-H, --hard-links            preserve hard links
+#-D                          same as --devices --specials
+#-I, --ignore-times          don't skip files that match size and time
+#-t, --times                 preserve modification times
+#-a, --archive               archive mode; equals -rlptgoD (no -H,-A,-X)
+#-v, --verbose               increase verbosity
+#--numeric-ids           don't map uid/gid values by user/group name
+#--delete                delete extraneous files from dest dirs
+#--exclude=PATTERN       exclude files matching PATTERN
+
+OPTIONS="-av --numeric-ids --delete"
+EXCLUDE_FILE="/usr/local/etc/update.exclude"
+EXCLUDE=""
+SERVER1="172.16.1.5"
+SERVER2="172.16.2.5"
+REMOTE_DIR="/data/sali/images/"
+IMAGE_NAME="hp32_debian85"
+RSYNC_PORT="873"
+DESTINATION="/"
+TEST="test"
+count=40 	# Maximum number of pings to try.
+
+echo "============================= WARNING ============================"
+echo "                            Update Image                         "
+echo "  This command will update this host with the image:$IMAGE_NAME. " 
+echo "  Some files are going to be deleted or overwritten.             " 
+echo "============================= WARNING ============================" 
+echo
+if [ "`echo $HOSTNAME|grep tux -c`" = "1" ]; then
+	SERVER=$SERVER1
+	echo "I'm a tux"
+	cp -f /usr/local/etc/resolv.conf.tux /etc/resolv.conf
+	cp -f /usr/local/etc/interfaces.tux /etc/network/interfaces
+else
+	SERVER=$SERVER2
+	echo "I'm a gnu"
+	cp -f /usr/local/etc/resolv.conf.gnu /etc/resolv.conf
+	cp -f /usr/local/etc/interfaces.gnu /etc/network/interfaces
+fi
+echo
+echo "Copy of network configuration concluded"
+echo
+service networking restart
+echo
+echo
+echo "Network interfaces restarted"
+echo
+echo "Test connectivity to image server"
+echo                       
+while [[ $count -ne 0 ]] ; do
+    ping -c 1 $SERVER                      # Try once.
+    rc=$?
+    if [[ $rc -eq 0 ]] ; then
+        count=1                      # If okay, flag to exit loop.		
+		echo "Image Server responding to ping."	
+	else
+		echo "Timeout."
+    fi
+    count=$[count - 1]     # Decrement variable count so we don't go forever.
+done
+echo
+echo "List of excluded files and directories"
+echo
+while IFS= read -r line
+do
+    # display $line or do something with $line
+	#echo "$line"
+	EXCLUDE+=" --exclude=$line"
+done <"$EXCLUDE_FILE"
+echo
+rsync $OPTIONS $EXCLUDE rsync://$SERVER:$RSYNC_PORT/$IMAGE_NAME/ $DESTINATION
+echo
+echo "Done..."
+sleep 3
+echo "Rebooting..."
+sleep 7
+/sbin/init 6
+#reboot
