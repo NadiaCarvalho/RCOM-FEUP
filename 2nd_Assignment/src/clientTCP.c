@@ -12,6 +12,7 @@ int main(int argc, char **argv) {
 
 	char *answer = malloc(100 * sizeof(char));
 	char *answer2 = malloc(3 * sizeof(char));
+	char *answer3 = malloc(100 * sizeof(char));
   if (argc != 2) {
     printf("\n\nInvalid arguments, expected:\n");
     printf(" ./app ftp://[<user>:<password>@]<host>/<url-path>\n\n");
@@ -63,8 +64,15 @@ int main(int argc, char **argv) {
   login_to_server(sockfd, url_info);
 	printf("%s\n", "logged in");
 
-	set_PASV_mode(sockfd);
+	set_PASV_mode(sockfd, answer3);
 	printf("%s\n", "Passive mode set !");
+
+	char ip[100];
+	char port1[100];
+	char port2[100];
+
+	get_ip_adress(answer3, ip,port1,port2);
+
 
   close(sockfd);
   exit(0);
