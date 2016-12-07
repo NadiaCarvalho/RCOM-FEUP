@@ -1,47 +1,71 @@
 /*      (C)2000 FEUP  */
+#include "utilities.h"
 #include "connection.h"
 
 #define SERVER_PORT 6000
 #define SERVER_ADDR "192.168.28.96"
 
-int main(int argc, char** argv){
+// login anonymous
+// password anything
 
-	int	sockfd;
-	struct  addrinfo hints, *res;
+int main(int argc, char **argv) {
 
-	memset(&hints, 0, sizeof(hints));
-	hints.ai_family = AF_INET;
-	hints.ai_socktype = SOCK_STREAM;
+	char *answer = malloc(100 * sizeof(char));
+	char *answer2 = malloc(3 * sizeof(char));
+  if (argc != 2) {
+    printf("\n\nInvalid arguments, expected:\n");
+    printf(" ./app ftp://[<user>:<password>@]<host>/<url-path>\n\n");
+		return -1;
+  }
 
-	//TODO: verificar se é efetivamente a porta 21 !
-	if(getaddrinfo(argv[1],"21",&hints,&res)!=0){
-		fprintf(stderr, "getaddrinfo: %s\n", "ERROR");
-		exit(0);
+	url *url_info = malloc(sizeof(url));
+	getInfo(argv[1], url_info);
+
+
+	if(0){
+    printf("%s\n",url_info->type);
+    printf("%s\n",url_info->user );
+    printf("%s\n",url_info->password);
+    printf("%s\n",url_info->host);
+    printf("%s\n",url_info->url_path);
+  }
+
+  int sockfd;
+  struct addrinfo hints, *res;
+
+  memset(&hints, 0, sizeof(hints));
+  hints.ai_family = AF_INET;
+  hints.ai_socktype = SOCK_STREAM;
+
+  // TODO: verificar se é efetivamente a porta 21 !
+  if (getaddrinfo(url_info->host, "21", &hints, &res) != 0) {
+    fprintf(stderr, "getaddrinfo: %s\n", "ERROR");
+    exit(0);
+  }
+
+  /*open an TCP socket*/
+  if ((sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol)) <
+      0) {
+    perror("socket()");
+    exit(0);
+  }
+
+  connect_to_server(sockfd, res);
+  read_from_server(sockfd, answer);
+/*	memp(answer2, answer, 3);
+	printf("%s\n", answer2);
+	if(strcmp(answer2,"220")){
+		printf("%s\n", "Connection established");
 	}
-/*
-	//server address handling
-	bzero((char*)&server_addr,sizeof(server_addr));
-
-	server_addr.sin_family = AF_INET;
-	server_addr.sin_addr.s_addr = inet_addr(SERVER_ADDR);	//32 bit Internet address network byte ordered
-	server_addr.sin_port = htons(SERVER_PORT);		//server TCP port must be network byte ordered
 */
+	//printf("Connection established:%s\n", answer);
 
-	/*open an TCP socket*/
-	if ((sockfd = socket(res->ai_family,res->ai_socktype,res->ai_protocol)) < 0) {
-    		perror("socket()");
-        	exit(0);
-    	}
+  login_to_server(sockfd, url_info);
+	printf("%s\n", "logged in");
 
+	set_PASV_mode(sockfd);
+	printf("%s\n", "Passive mode set !");
 
-	/*connect to the server*/
-	connect_to_server(sockfd,res);
-
-	login_to_server(sockfd);
-
-
-
-
-	close(sockfd);
-	exit(0);
+  close(sockfd);
+  exit(0);
 }
