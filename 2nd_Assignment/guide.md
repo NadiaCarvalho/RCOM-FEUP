@@ -1,10 +1,50 @@
 - Connect cables
 ![Image](place_link)
 - Run Script in all pcs
-
-- Reboot Switch
-  - copy tftp://192.168.109.1/2 startup-config (alternativamente fazer load do nosso ->) copy flash:tuxy_clean startup-config
-  - del flash:vlan.dat
-  - reload
-- Clean router
-  - 
+- Create Vlans
+  - mudar para o pc 4 (cabo switch console ligado ao tux4 s0)
+  - terminal do switch nao estabelece ligacao:
+      - ligado em varios pcs
+      - verificar cabo
+      - trocar cabo T3 e T4 caso nao funcioem
+      - seguir a foto à regra
+  - Reboot vlans
+    - enable
+    - pass: 8nortel
+    - del flash:vlan.dat
+    - copy flash:tux(Bancada)-clean stratup-config
+    - reload  
+  - Create vlans (isto ou correr script switch.sh)
+    - configure terminal
+    - vlan (Bancada)0
+    - exit
+    - vlan (Bancada)1
+    - end
+  - Add Ports to vlan
+    - configure terminal
+    - interface fastethernet 0/1 (porta no switcher - estabelecido por nos ex: porta 1 -tux(Bancada)1)
+    - switchport node access
+    - switchport access vlan (bancada)0
+    - exit
+    - interface fastethernet 0/4 (porta no switcher - estabelecido por nos ex: porta 4 -tux(Bancada)4)
+    - switchport node access
+    - switchport access vlan (bancada)0
+    - exit
+    - interface fastethernet 0/3 (porta no switcher - estabelecido por nos ex: porta 3 -tux(Bancada)4)
+    - switchport node access
+    - switchport access vlan (bancada)1
+    - exit
+    - interface fastethernet 0/2 (porta no switcher - estabelecido por nos ex: porta 2 -tux(Bancada)2)
+    - switchport node access
+    - switchport access vlan (bancada)1
+    - exit
+    - interface fastethernet 0/5 (porta no switcher - estabelecido por nos ex: porta 5 -tux(Bancada)Rc)
+    - switchport node access
+    - switchport access vlan (bancada)1
+  - Reboot Router
+    - copy flash:tux(bancada)-clean startup-config
+    - reload
+  - Configurar Router
+    - username: root
+    - pass: 8nortel
+    - correr router.sh
