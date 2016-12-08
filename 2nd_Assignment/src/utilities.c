@@ -30,3 +30,25 @@ int getInfo(char * str,url * url_info){
   }
   return 1;
 }
+
+int get_filename(char path[100], char filename[100]){
+
+  int i = strlen(path)-1;
+
+  while(1){
+    if(path[i] == '/'){
+      break;
+    }
+    i--;
+  }
+
+  i++;
+  int j=0;
+  while(i < strlen(path)){
+    filename[j] = path[i];
+    i++;
+    j++;
+  }
+
+  printf("Starting reading file : %s\n", filename);
+}

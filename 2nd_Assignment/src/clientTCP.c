@@ -38,7 +38,6 @@ int main(int argc, char **argv) {
   hints.ai_family = AF_INET;
   hints.ai_socktype = SOCK_STREAM;
 
-  // TODO: verificar se é efetivamente a porta 21 !
   if (getaddrinfo(url_info->host, "21", &hints, &res) != 0) {
     fprintf(stderr, "getaddrinfo: %s\n", "ERROR");
     exit(0);
@@ -71,9 +70,50 @@ int main(int argc, char **argv) {
 	char port1[100];
 	char port2[100];
 
-	get_ip_adress(answer3, ip,port1,port2);
+	get_ip_adress(answer3, ip, port1, port2);
 
+	printf("Ip : %s\n", ip);
 
+	int port = atoi(port1) * 256 + atoi(port2);
+
+	printf("Port : %d\n", port);
+
+	int datafd = initTCP(ip, port);
+
+	asking_file_to_server(sockfd,url_info);
+
+	char filename[100];
+
+	get_filename(url_info->url_path, filename);
+
+	read_file_from_server(datafd,filename);
+
+	close(datafd);
   close(sockfd);
   exit(0);
+}
+
+int initTCP(char *address, int port) {
+    int	sockfd;
+    struct sockaddr_in server_addr;
+
+    /*server address handling*/
+	bzero((char*)&server_addr,sizeof(server_addr));
+	server_addr.sin_family = AF_INET;
+	server_addr.sin_addr.s_addr = inet_addr(address);	/*32 bit Internet address network byte ordered*/
+	server_addr.sin_port = htons(port);		        /*server TCP port must be network byte ordered */
+
+    /*open an TCP socket*/
+	if ((sockfd = socket(AF_INET,SOCK_STREAM,0)) < 0) {
+    	perror("socket()");
+      exit(-1);
+    }
+
+	/*connect to the server*/
+    if(connect(sockfd,(struct sockaddr *)&server_addr,sizeof(server_addr)) < 0){
+      perror("connect()");
+			exit(-1);
+		}
+
+    return sockfd;
 }

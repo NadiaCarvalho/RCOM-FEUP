@@ -1,6 +1,7 @@
 #include "connection.h"
 
 #define MAXDATASIZE 100 // max number of bytes we can get at once
+#define BUFFER_SIZE 1000
 
 int connect_to_server(int socket, struct addrinfo *res) {
   if (connect(socket, res->ai_addr, res->ai_addrlen) < 0) {
@@ -127,6 +128,57 @@ int read_from_server(int sockfd, char * answer) {
   }
 
   answer[numbytes] = '\0';
+
+  return 1;
+}
+
+int asking_file_to_server(int socketfd, url *url_info){
+  char *file_path_to_download_command = malloc(100*sizeof(char));
+  char *answer = malloc(20*sizeof(char));
+
+  memset(file_path_to_download_command,0,strlen(file_path_to_download_command));
+
+  strcat(file_path_to_download_command, "RETR ");
+  strcat(file_path_to_download_command, url_info->url_path);
+  strcat(file_path_to_download_command, "\r\n");
+
+  printf("%s\n", file_path_to_download_command);
+
+  if(write(socketfd, file_path_to_download_command, strlen(file_path_to_download_command)) < 0){
+    perror("error on write retr command to the server");
+    exit(-1);
+  }
+
+  read_from_server(socketfd, answer);
+
+  printf("%s\n",answer);
+
+  return 1;
+}
+
+int read_file_from_server(int datafd,char *filename){
+  int new_file_fd = open(filename, O_CREAT | O_WRONLY | O_TRUNC);
+  int ret;
+  char buffer[BUFFER_SIZE];
+
+  if(new_file_fd < 0){
+    perror("Error open file");
+    exit(-1);
+  }
+
+  while((ret=read(datafd,buffer, BUFFER_SIZE)) > 0){
+    if(ret == -1){
+      perror("Error reading file from server");
+      exit(-1);
+    }
+
+    if(write(new_file_fd,buffer,ret) < 0){
+      perror("Error writing to the destination file");
+      exit(-1);
+    }
+  }
+
+  printf("File read, ending program\n");
 
   return 1;
 }
