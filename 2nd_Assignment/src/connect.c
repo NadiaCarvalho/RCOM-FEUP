@@ -157,7 +157,7 @@ int asking_file_to_server(int socketfd, url *url_info){
 }
 
 int read_file_from_server(int datafd,char *filename){
-  int new_file_fd = open(filename, O_CREAT | O_WRONLY | O_TRUNC);
+  int new_file_fd = open(filename, O_CREAT | O_WRONLY | O_TRUNC, S_IWUSR | S_IRUSR);
   int ret;
   char buffer[BUFFER_SIZE];
 

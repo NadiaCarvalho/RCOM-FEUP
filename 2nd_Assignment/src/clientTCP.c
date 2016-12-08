@@ -82,9 +82,11 @@ int main(int argc, char **argv) {
 
 	asking_file_to_server(sockfd,url_info);
 
-	char filename[100];
+	char * filename = malloc(strlen(url_info->url_path));
 
 	get_filename(url_info->url_path, filename);
+
+	printf("%s\n", filename);
 
 	read_file_from_server(datafd,filename);
 

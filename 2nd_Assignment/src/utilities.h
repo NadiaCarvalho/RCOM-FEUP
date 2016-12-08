@@ -24,3 +24,4 @@ typedef struct Url {
 } url;
 
 int getInfo(char * str, url * url_info);
+int get_filename(char path[100], char * filename);
