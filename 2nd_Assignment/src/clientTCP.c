@@ -14,6 +14,7 @@ int main(int argc, char **argv) {
 
 	char *answer = malloc(100 * sizeof(char));
 	char *answer3 = malloc(100 * sizeof(char));
+
   if (argc != 2) {
     printf("\n\nInvalid arguments, expected:\n");
     printf(" ./app ftp://[<user>:<password>@]<host>/<url-path>\n\n");
@@ -23,6 +24,12 @@ int main(int argc, char **argv) {
 	url *url_info = malloc(sizeof(url));
 	getInfo(argv[1], url_info);
 
+	int ret = strcmp(url_info->user,"anonymous");
+
+	if(ret != 0){
+		printf("Error! User must be anonymous\n");
+		exit(-1);
+	}
 
   int sockfd;
   struct addrinfo hints, *res;
