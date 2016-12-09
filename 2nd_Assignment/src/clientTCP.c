@@ -21,12 +21,6 @@ int main(int argc, char **argv) {
 
 	url *url_info = malloc(sizeof(url));
 	getInfo(argv[1], url_info);
-	char *path = malloc(strlen(url_info->url_path));
-  	memcpy(path,url_info->url_path,strlen(url_info->url_path));
-  	printf("AAAAA: %s\n",path);
-	printf("%d\n", strlen(url_info->url_path));
-	printf("AAAAA: %s\n",url_info->url_path);
-
 
 
   int sockfd;

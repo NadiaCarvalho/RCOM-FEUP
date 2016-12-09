@@ -132,11 +132,9 @@ int read_from_server(int sockfd, char * answer) {
 
 int asking_file_to_server(int socketfd, url *url_info){
   char *file_path_to_download_command = malloc(100*sizeof(char));
-  char *answer = malloc(20*sizeof(char));
+  char answer[100];
 
   memset(file_path_to_download_command,0,strlen(file_path_to_download_command));
-
-	printf("AAAAAAAA: %s\n",url_info->url_path);
 
   strcat(file_path_to_download_command, "RETR ");
   strcat(file_path_to_download_command, url_info->url_path);
@@ -152,6 +150,22 @@ int asking_file_to_server(int socketfd, url *url_info){
   read_from_server(socketfd, answer);
 
   printf("%s\n",answer);
+  char ret[5];
+
+  ret[0] = answer[0];
+  ret[1] = answer[1];
+  ret[2] = answer[2];
+  ret[3] = '\0';
+	
+  int ret_int = atoi(ret);
+  if(ret_int == 550){
+    printf("File does not exit!Ending program!\n");
+    exit(-1);
+  }
+
+
+
+  printf("aaa: %s\n",ret);
 
   return 1;
 }
