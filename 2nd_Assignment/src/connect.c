@@ -114,6 +114,8 @@ int write_to_server(int sockfd, const char *message) {
   if (bytes == strlen(message))
     return 1;
   perror("Writting to server.");
+
+  return 1;
 }
 
 int read_from_server(int sockfd, char * answer) {

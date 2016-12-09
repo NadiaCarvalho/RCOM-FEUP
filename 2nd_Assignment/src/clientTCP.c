@@ -2,6 +2,8 @@
 #include "utilities.h"
 #include "connection.h"
 
+int initTCP(char *address, int port);
+
 #define SERVER_PORT 6000
 #define SERVER_ADDR "192.168.28.96"
 
@@ -11,7 +13,6 @@
 int main(int argc, char **argv) {
 
 	char *answer = malloc(100 * sizeof(char));
-	char *answer2 = malloc(3 * sizeof(char));
 	char *answer3 = malloc(100 * sizeof(char));
   if (argc != 2) {
     printf("\n\nInvalid arguments, expected:\n");
