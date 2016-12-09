@@ -29,7 +29,7 @@ int main(int argc, char **argv) {
   memset(&hints, 0, sizeof(hints));
   hints.ai_family = AF_INET;
   hints.ai_socktype = SOCK_STREAM;
- 
+
   if (getaddrinfo(url_info->host, "21", &hints, &res) != 0) {
     fprintf(stderr, "getaddrinfo: %s\n", "ERROR");
     exit(0);
@@ -45,10 +45,10 @@ int main(int argc, char **argv) {
   connect_to_server(sockfd, res);
   read_from_server(sockfd, answer);
 
- 
+
   login_to_server(sockfd, url_info);
 
-	printf("%s\n", "logged in");
+	printf("%s\n\n", "Logged in");
 
 	set_PASV_mode(sockfd, answer3);
 	printf("%s\n", "Passive mode set !");
@@ -63,11 +63,9 @@ int main(int argc, char **argv) {
 
 	int port = atoi(port1) * 256 + atoi(port2);
 
-	printf("Port : %d\n", port);
+	printf("Port : %d\n\n", port);
 
 	int datafd = initTCP(ip, port);
-
-	printf("BBBBBBB: %s\n",url_info->url_path); 
 
 	asking_file_to_server(sockfd,url_info);
 

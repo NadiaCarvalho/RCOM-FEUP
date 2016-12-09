@@ -22,8 +22,8 @@ int getInfo(char * str,url * url_info){
   strcpy(url_info->host, token);
   token = strtok(NULL, "");
   strcpy(url_info->url_path, token);
-  printf("%s\n",token);
-  if(1){
+
+  if(0){
     printf("%s\n",url_info->type);
     printf("%s\n",url_info->user );
     printf("%s\n",url_info->password);
@@ -35,21 +35,15 @@ int getInfo(char * str,url * url_info){
 
 int get_filename(char * path, char * filename){
 
-	printf("%s\n",path);
   char * token = malloc(strlen(path));
   memcpy(token, path, strlen(path));
   token = strtok(path, "/");
+
   while(token != NULL){
-printf("token : %s\n", token);
-	memset(filename,0,strlen(filename));
+	  memset(filename,0,strlen(filename));
     memcpy(filename, token, strlen(token));
-	printf("Starting reading file : %s\n", filename);
     token = strtok(NULL, "/");
   }
 
-  printf("Starting reading file : %s\n", filename);
-  
-
-printf("ssdasdasdasdasda\n");
-return 1;
+  return 1;
 }

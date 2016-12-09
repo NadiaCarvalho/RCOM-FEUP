@@ -140,8 +140,6 @@ int asking_file_to_server(int socketfd, url *url_info){
   strcat(file_path_to_download_command, url_info->url_path);
   strcat(file_path_to_download_command, "\r\n");
 
-  printf("%s\n", file_path_to_download_command);
-
   if(write(socketfd, file_path_to_download_command, strlen(file_path_to_download_command)) < 0){
     perror("error on write retr command to the server");
     exit(-1);
@@ -156,16 +154,12 @@ int asking_file_to_server(int socketfd, url *url_info){
   ret[1] = answer[1];
   ret[2] = answer[2];
   ret[3] = '\0';
-	
+
   int ret_int = atoi(ret);
   if(ret_int == 550){
     printf("File does not exit!Ending program!\n");
     exit(-1);
   }
-
-
-
-  printf("aaa: %s\n",ret);
 
   return 1;
 }
@@ -179,6 +173,8 @@ int read_file_from_server(int datafd,char *filename){
     perror("Error open file");
     exit(-1);
   }
+
+  printf("Start reading file\n\n");
 
   while((ret=read(datafd,buffer, BUFFER_SIZE)) > 0){
     if(ret == -1){
