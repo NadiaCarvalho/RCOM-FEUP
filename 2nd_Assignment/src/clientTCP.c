@@ -21,15 +21,13 @@ int main(int argc, char **argv) {
 
 	url *url_info = malloc(sizeof(url));
 	getInfo(argv[1], url_info);
+	char *path = malloc(strlen(url_info->url_path));
+  	memcpy(path,url_info->url_path,strlen(url_info->url_path));
+  	printf("AAAAA: %s\n",path);
+	printf("%d\n", strlen(url_info->url_path));
+	printf("AAAAA: %s\n",url_info->url_path);
 
 
-	if(0){
-    printf("%s\n",url_info->type);
-    printf("%s\n",url_info->user );
-    printf("%s\n",url_info->password);
-    printf("%s\n",url_info->host);
-    printf("%s\n",url_info->url_path);
-  }
 
   int sockfd;
   struct addrinfo hints, *res;
@@ -37,7 +35,7 @@ int main(int argc, char **argv) {
   memset(&hints, 0, sizeof(hints));
   hints.ai_family = AF_INET;
   hints.ai_socktype = SOCK_STREAM;
-
+ 
   if (getaddrinfo(url_info->host, "21", &hints, &res) != 0) {
     fprintf(stderr, "getaddrinfo: %s\n", "ERROR");
     exit(0);
@@ -52,15 +50,10 @@ int main(int argc, char **argv) {
 
   connect_to_server(sockfd, res);
   read_from_server(sockfd, answer);
-/*	memp(answer2, answer, 3);
-	printf("%s\n", answer2);
-	if(strcmp(answer2,"220")){
-		printf("%s\n", "Connection established");
-	}
-*/
-	//printf("Connection established:%s\n", answer);
 
+ 
   login_to_server(sockfd, url_info);
+
 	printf("%s\n", "logged in");
 
 	set_PASV_mode(sockfd, answer3);
@@ -80,13 +73,13 @@ int main(int argc, char **argv) {
 
 	int datafd = initTCP(ip, port);
 
+	printf("BBBBBBB: %s\n",url_info->url_path); 
+
 	asking_file_to_server(sockfd,url_info);
 
 	char * filename = malloc(strlen(url_info->url_path));
 
 	get_filename(url_info->url_path, filename);
-
-	printf("%s\n", filename);
 
 	read_file_from_server(datafd,filename);
 

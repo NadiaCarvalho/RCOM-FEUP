@@ -1,27 +1,29 @@
+
 #include "utilities.h"
 
 int getInfo(char * str,url * url_info){
 
   char * token = malloc(strlen(str));
+  strcpy(token, str);
 
-  url_info->type = malloc(strlen(token));
-  url_info->user = malloc(strlen(token));
-  url_info->password = malloc(strlen(token));
-  url_info->host = malloc(strlen(token));
-  url_info->url_path = malloc(strlen(token));
+  url_info->type = calloc(strlen(token), sizeof(char));
+  url_info->user = calloc(strlen(token), sizeof(char));
+  url_info->password = calloc(strlen(token), sizeof(char));
+  url_info->host = calloc(strlen(token), sizeof(char));
+  url_info->url_path = calloc(strlen(token), sizeof(char));
 
-  memcpy(token, str, strlen(str));
-  memcpy(url_info->type, token, 6);
+
+  strcpy(url_info->type, token);
   token = strtok(token+6, ":");
-  memcpy(url_info->user, token, strlen(token));
+  strcpy(url_info->user, token);
   token = strtok(NULL, "@");
-  memcpy(url_info->password, token, strlen(token));
+  strcpy(url_info->password, token);
   token = strtok(NULL, "/");
-  memcpy(url_info->host, token, strlen(token));
+  strcpy(url_info->host, token);
   token = strtok(NULL, "");
-  memcpy(url_info->url_path, token, strlen(token));
-
-  if(0){
+  strcpy(url_info->url_path, token);
+  printf("%s\n",token);
+  if(1){
     printf("%s\n",url_info->type);
     printf("%s\n",url_info->user );
     printf("%s\n",url_info->password);
@@ -31,16 +33,23 @@ int getInfo(char * str,url * url_info){
   return 1;
 }
 
-int get_filename(char path[100], char * filename){
+int get_filename(char * path, char * filename){
 
+	printf("%s\n",path);
   char * token = malloc(strlen(path));
   memcpy(token, path, strlen(path));
   token = strtok(path, "/");
   while(token != NULL){
+printf("token : %s\n", token);
+	memset(filename,0,strlen(filename));
     memcpy(filename, token, strlen(token));
+	printf("Starting reading file : %s\n", filename);
     token = strtok(NULL, "/");
   }
 
   printf("Starting reading file : %s\n", filename);
-  return 1;
+  
+
+printf("ssdasdasdasdasda\n");
+return 1;
 }

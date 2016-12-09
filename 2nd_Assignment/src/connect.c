@@ -30,8 +30,6 @@ int login_to_server(int sockfd, url *url_info) {
 
   printf("%s\n",answer );
 
-  free(answer);
-
   strcat(user_password_command, "PASS ");
   strcat(user_password_command, url_info->password);
   strcat(user_password_command, "\r\n");
@@ -40,9 +38,9 @@ int login_to_server(int sockfd, url *url_info) {
 
     write_to_server(sockfd, user_password_command);
 
-    read_from_server(sockfd, answer);
+    read_from_server(sockfd, answer2);
 
-    printf("%s\n",answer);
+    printf("%s\n",answer2);
 
 
   return 1;
@@ -137,6 +135,8 @@ int asking_file_to_server(int socketfd, url *url_info){
   char *answer = malloc(20*sizeof(char));
 
   memset(file_path_to_download_command,0,strlen(file_path_to_download_command));
+
+	printf("AAAAAAAA: %s\n",url_info->url_path);
 
   strcat(file_path_to_download_command, "RETR ");
   strcat(file_path_to_download_command, url_info->url_path);
