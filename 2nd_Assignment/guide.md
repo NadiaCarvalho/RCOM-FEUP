@@ -3,12 +3,17 @@
 - Run Script in all pcs (chmod +x script2)
 - Create Vlans
   - mudar para o pc 4 (cabo switch console ligado ao tux4 s0)
-  - terminal do switch nao estabelece ligacao:
+  - se terminal do switch nao estabelece ligacao:
       - ligado em varios pcs
       - verificar cabo
       - trocar cabo T3 e T4 caso nao funcioem
       - seguir a foto à regra
   - Reboot vlans
+  - Com script
+    - enable 
+    - pass
+    - correr script no outro terminal normal.
+  - Sem script
     - enable
     - pass: 8nortel
     - del flash:vlan.dat
