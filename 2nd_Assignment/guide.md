@@ -1,6 +1,6 @@
 - Connect cables
 ![Image](place_link)
-- Run Script in all pcs
+- Run Script in all pcs (chmod +x script2)
 - Create Vlans
   - mudar para o pc 4 (cabo switch console ligado ao tux4 s0)
   - terminal do switch nao estabelece ligacao:
