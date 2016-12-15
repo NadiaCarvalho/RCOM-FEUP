@@ -2,18 +2,39 @@
 #include "utilities.h"
 #include "connection.h"
 
-int initTCP(char *address, int port);
-
-#define SERVER_PORT 6000
-#define SERVER_ADDR "192.168.28.96"
-
 // login anonymous
 // password anything
 
+int initTCP(char *address, int port) {
+    int	sockfd;
+    struct sockaddr_in server_addr;
+
+    /*server address handling*/
+	bzero((char*)&server_addr,sizeof(server_addr));
+	server_addr.sin_family = AF_INET;
+	server_addr.sin_addr.s_addr = inet_addr(address);	/*32 bit Internet address network byte ordered*/
+	server_addr.sin_port = htons(port);		        /*server TCP port must be network byte ordered */
+
+    /*open an TCP socket*/
+	if ((sockfd = socket(AF_INET,SOCK_STREAM,0)) < 0) {
+    	perror("socket()");
+      exit(-1);
+    }
+
+	/*connect to the server*/
+    if(connect(sockfd,(struct sockaddr *)&server_addr,sizeof(server_addr)) < 0){
+      perror("connect()");
+			exit(-1);
+		}
+
+    return sockfd;
+}
+
+
 int main(int argc, char **argv) {
 
-	char *answer = malloc(100 * sizeof(char));
-	char *answer3 = malloc(100 * sizeof(char));
+	char answer[MAXDATASIZE];
+	char answer3[MAXDATASIZE];
 
   if (argc != 2) {
     printf("\n\nInvalid arguments, expected:\n");
@@ -77,38 +98,15 @@ int main(int argc, char **argv) {
 
 	asking_file_to_server(sockfd,url_info);
 
-	char * filename = malloc(strlen(url_info->url_path));
+	char filename[MAXDATASIZE];
 
 	get_filename(url_info->url_path, filename);
+
+	printf("filename: %s\n", filename);
 
 	read_file_from_server(datafd,filename);
 
 	close(datafd);
   close(sockfd);
   exit(0);
-}
-
-int initTCP(char *address, int port) {
-    int	sockfd;
-    struct sockaddr_in server_addr;
-
-    /*server address handling*/
-	bzero((char*)&server_addr,sizeof(server_addr));
-	server_addr.sin_family = AF_INET;
-	server_addr.sin_addr.s_addr = inet_addr(address);	/*32 bit Internet address network byte ordered*/
-	server_addr.sin_port = htons(port);		        /*server TCP port must be network byte ordered */
-
-    /*open an TCP socket*/
-	if ((sockfd = socket(AF_INET,SOCK_STREAM,0)) < 0) {
-    	perror("socket()");
-      exit(-1);
-    }
-
-	/*connect to the server*/
-    if(connect(sockfd,(struct sockaddr *)&server_addr,sizeof(server_addr)) < 0){
-      perror("connect()");
-			exit(-1);
-		}
-
-    return sockfd;
 }

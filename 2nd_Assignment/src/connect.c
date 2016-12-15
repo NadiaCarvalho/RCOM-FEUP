@@ -1,7 +1,6 @@
 #include "connection.h"
 
-#define MAXDATASIZE 100 // max number of bytes we can get at once
-#define BUFFER_SIZE 1000
+#define BUFFER_SIZE 512
 
 int connect_to_server(int socket, struct addrinfo *res) {
   if (connect(socket, res->ai_addr, res->ai_addrlen) < 0) {
@@ -13,10 +12,13 @@ int connect_to_server(int socket, struct addrinfo *res) {
 
 int login_to_server(int sockfd, url *url_info) {
 
-  char *answer = malloc(100 * sizeof(char));
-  char *answer2 = malloc(100 * sizeof(char));
-  char * user_password_command = malloc(10 * sizeof(char) + strlen(url_info->password));
-  char * user_login_command = malloc(10 * sizeof(char) + strlen(url_info->user));
+  char answer[MAXDATASIZE];
+  char answer2[MAXDATASIZE];
+  char user_password_command[MAXDATASIZE];
+  char user_login_command[MAXDATASIZE];
+
+  memset(user_login_command,0,sizeof(user_login_command));
+  memset(user_password_command,0,sizeof(user_password_command));
 
   strcat(user_login_command, "USER ");
   strcat(user_login_command, url_info->user);
@@ -46,7 +48,7 @@ int login_to_server(int sockfd, url *url_info) {
   return 1;
 }
 
-int set_PASV_mode(int sockfd, char *answer){
+int set_PASV_mode(int sockfd, char answer[MAXDATASIZE]){
   char pasv_command[9]="PASV \r\n";
 
   write_to_server(sockfd, pasv_command);
@@ -56,15 +58,15 @@ int set_PASV_mode(int sockfd, char *answer){
   return 1;
 }
 
-int get_ip_adress(char *answer3, char ip[100], char port1[100], char port2[100]){
+int get_ip_adress(char answer3[MAXDATASIZE], char ip[100], char port1[100], char port2[100]){
 
-  char *ret;
+  char *ret  = calloc(MAXDATASIZE, sizeof(char));;
   ret=strchr(answer3, '(');
 
   ret++;
 
   get_string(ret, 4, ip);
-
+printf("11111111\n" );
   ret += strlen(ip);
 
   get_string(ret, 2, port1);
@@ -118,7 +120,7 @@ int write_to_server(int sockfd, const char *message) {
   return 1;
 }
 
-int read_from_server(int sockfd, char * answer) {
+int read_from_server(int sockfd, char answer[MAXDATASIZE]) {
 
   int numbytes = 0;
 
@@ -133,10 +135,9 @@ int read_from_server(int sockfd, char * answer) {
 }
 
 int asking_file_to_server(int socketfd, url *url_info){
-  char *file_path_to_download_command = malloc(100*sizeof(char));
-  char answer[100];
-
-  memset(file_path_to_download_command,0,strlen(file_path_to_download_command));
+  char file_path_to_download_command[MAXDATASIZE];
+  memset(file_path_to_download_command,0,sizeof(file_path_to_download_command));
+  char answer[MAXDATASIZE];
 
   strcat(file_path_to_download_command, "RETR ");
   strcat(file_path_to_download_command, url_info->url_path);
@@ -166,10 +167,10 @@ int asking_file_to_server(int socketfd, url *url_info){
   return 1;
 }
 
-int read_file_from_server(int datafd,char *filename){
-  int new_file_fd = open(filename, O_CREAT | O_WRONLY | O_TRUNC, S_IWUSR | S_IRUSR);
+int read_file_from_server(int datafd,char filename[MAXDATASIZE]){
+  int new_file_fd = open(filename, O_CREAT|O_WRONLY, 0777);
   int ret;
-  char buffer[BUFFER_SIZE];
+  char buffer[MAXDATASIZE];
 
   if(new_file_fd < 0){
     perror("Error open file");
@@ -177,6 +178,7 @@ int read_file_from_server(int datafd,char *filename){
   }
 
   printf("Start reading file\n\n");
+
 
   while((ret=read(datafd,buffer, BUFFER_SIZE)) > 0){
     if(ret == -1){

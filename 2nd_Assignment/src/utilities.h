@@ -14,6 +14,7 @@
 #include <termios.h>
 #include <fcntl.h>
 
+#define MAXDATASIZE 512
 
 typedef struct Url {
   char * type;
