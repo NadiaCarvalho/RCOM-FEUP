@@ -98,7 +98,7 @@ int main(int argc, char **argv) {
 
 	asking_file_to_server(sockfd,url_info);
 
-	char filename[MAXDATASIZE];
+	char *filename = calloc(MAXDATASIZE, sizeof(char));
 
 	get_filename(url_info->url_path, filename);
 
